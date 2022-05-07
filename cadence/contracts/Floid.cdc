@@ -38,9 +38,11 @@ pub contract Floid {
     pub event ContractInitialized()
 
     pub event FloidIdentifierCreated(sequence: UInt256)
-    pub event FloidIdentifierRegistered(owner: Address, sequence: UInt256)
     pub event FloidIdentifierStoreTransferKeyGenerated(owner: Address, storeType: UInt8, key: String)
     pub event FloidIdentifierStoreTransfered(sender: Address, storeType: UInt8, recipient: Address)
+
+    pub event FloidProtocolIdentifierRegistered(owner: Address, sequence: UInt256)
+    pub event FloidProtocolReverseIndexUpdated(category: UInt8, key: String, address: Address, remove: Bool)
 
     /**    ____ ___ ____ ___ ____
        *   [__   |  |__|  |  |___
@@ -56,6 +58,72 @@ pub contract Floid {
        *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
         *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
          ***********************************************************/
+
+    // enum for supported chain type
+    pub enum SupportedChainType: UInt8 {
+        pub case EVM_COMPATIBLE
+    }
+
+    // Struct of Third party Address ID
+    pub struct AddressID {
+        pub let chain: SupportedChainType
+        pub let address: String
+        pub let referID: String?
+
+        init(_ chain: SupportedChainType, address: String, referID: String?) {
+            self.chain = chain
+            self.address = address
+            self.referID = referID
+        }
+
+        // get the identify string of chain id
+        pub fun getChainID(): String {
+            var chainID: String = "chainstd"
+            switch self.chain {
+            case SupportedChainType.EVM_COMPATIBLE:
+                chainID = "eip155"
+                break
+            }
+            return chainID.concat(":").concat(self.referID ?? "<x>")
+        }
+
+        // get the identify string of the address
+        pub fun toString(): String {
+            return self.getChainID().concat(":").concat(self.address)
+        }
+    }
+
+    // parse Address id from string
+    access(contract) fun parseAddressID(str: String): AddressID? {
+        let parseIdx: [Int; 2] = [-1,-1]
+        var i = 0
+        var cnt = 0
+        while i < str.length {
+            if str[i] == ":" {
+                if cnt >= 2 {
+                    return nil
+                }
+                parseIdx[cnt] = i
+                cnt = cnt + 1
+            }
+            i = i + 1
+        }
+        if parseIdx[0] < 0 || parseIdx[1] < 0 {
+            return nil
+        }
+
+        let chainID = str.slice(from: 0, upTo: parseIdx[0])
+        var chain: SupportedChainType? = nil
+        switch chainID {
+        case "eip155":
+            chain = SupportedChainType.EVM_COMPATIBLE
+            break
+        }
+        if chain == nil {
+            return nil
+        }
+        return AddressID(chain!, address: str.slice(from: parseIdx[1], upTo: str.length), referID: str.slice(from: parseIdx[0], upTo: parseIdx[1]))
+    }
 
     // floid generic data type
     pub enum GenericStoreType: UInt8 {
@@ -75,20 +143,30 @@ pub contract Floid {
 
     // A public interface to address binding store
     pub resource interface AddressBindingStorePublic {
-
+        // check if address id is binded 
+        pub fun isBinded(addrID: AddressID): Bool
     }
 
     // third party address binding store
     pub resource AddressBindingStore: FloidIdentifierStore, AddressBindingStorePublic {
+        // mapping of the binding AddressID {chainID: {addressID: AddressID}}
+        access(self) let bindingMap: {String: {String: AddressID}}
 
         init() {
-
+            self.bindingMap = {}
         }
 
         // --- Getters - Public Interfaces ---
 
         pub fun getOwner(): Address {
             return self.owner!.address
+        }
+
+        pub fun isBinded(addrID: AddressID): Bool {
+            if let addresses = self.bindingMap[addrID.getChainID()] {
+                return addresses.containsKey(addrID.toString())
+            }
+            return false
         }
 
         // --- Setters - Private Interfaces ---
@@ -437,15 +515,27 @@ pub contract Floid {
         }
     }
 
+    // enumerations of reverse index
+    pub enum ReverseIndexType: UInt8 {
+        pub case ThirdPartyChain
+        pub case KeyToAddresses
+    }
+
     // A public interface to Floid Protocol
     pub resource interface FloidProtocolPublic {
-        // borrow users' identifier
-        pub fun borrowIdentifier(sequence: UInt256): &FloidIdentifier{FloidIdentifierPublic}?
         // check if registered to Protocol
         pub fun isRegistered(user: Address): Bool
+        // borrow users' identifier
+        pub fun borrowIdentifier(sequence: UInt256): &FloidIdentifier{FloidIdentifierPublic}?
+        // get reverse binding addresses
+        pub fun getReverseBindings(_ category: ReverseIndexType, key: String): [Address]
+        // sync KeyToAddress reverse index of any address
+        pub fun syncPublicKeysReverseIndex(address: Address)
 
         // register users' identifier
         access(contract) fun registerIdentifier(user: Capability<&FloidIdentifier{FloidIdentifierPublic}>)
+        // update reverse index
+        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressID, address: Address, remove: Bool)
     }
 
     // Resource of the Floid Protocol
@@ -454,10 +544,13 @@ pub contract Floid {
         access(self) let registeredAddresses: [Address]
         // all capabilities
         access(self) let registeredCapabilities: {UInt256: Capability<&FloidIdentifier{FloidIdentifierPublic}>}
+        // reverse indexes
+        access(self) let reverseMapping: {ReverseIndexType: {String: {Address: Bool}}}
 
         init() {
             self.registeredAddresses = []
             self.registeredCapabilities = {}
+            self.reverseMapping = {}
         }
 
         // --- Getters - Public Interfaces ---
@@ -473,7 +566,44 @@ pub contract Floid {
             return nil
         }
 
-        // --- Setters - Private Interfaces ---
+        pub fun getReverseBindings(_ category: ReverseIndexType, key: String): [Address] {
+            let records = &self.reverseMapping[category] as &{String: {Address: Bool}}?
+            if records == nil {
+                return []
+            }
+            if records![key] == nil {
+                return []
+            }
+            return records![key]!.keys
+        }
+
+        pub fun syncPublicKeysReverseIndex(address: Address) {
+            let removeOrNot: [Bool] = []
+            let availableKeys: [String] = []
+            let accountKeys = getAccount(address).keys
+            var i = 0
+            while true {
+                let currentKey = accountKeys.get(keyIndex: i)
+                if currentKey == nil {
+                    break
+                }
+                availableKeys.append(String.encodeHex(currentKey!.publicKey.publicKey))
+                removeOrNot.append(currentKey!.isRevoked)
+                i = i + 1
+            }
+
+            // update all keys
+            i = 0
+            while i < availableKeys.length {
+                self.updateReverseIndex(
+                    ReverseIndexType.KeyToAddresses,
+                    key: availableKeys[i],
+                    address: address,
+                    remove: removeOrNot[i]
+                )
+                i = i + 1
+            }
+        }
 
         // --- Setters - Contract Only ---
 
@@ -487,13 +617,63 @@ pub contract Floid {
             self.registeredAddresses.append(user.address)
             self.registeredCapabilities.insert(key: seq, user)
 
-            emit FloidIdentifierRegistered(
+            emit FloidProtocolIdentifierRegistered(
                 owner: user.address,
                 sequence: seq
             )
         }
 
+        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressID, address: Address, remove: Bool) {
+            pre {
+                self.registeredAddresses.contains(address): "Address should be registered already."
+            }
+            let addrIDKey = addrID.toString()
+            let currentBindings = self.getReverseBindings(ReverseIndexType.ThirdPartyChain, key: addrIDKey)
+            if !remove && currentBindings.length > 0 {
+                panic("Only one address can be binding to same AddressID")
+            } else if remove && !currentBindings.contains(address) {
+                return
+            }
+
+            // check binding in the identifier
+            let user = Floid.borrowIdentifier(user: address) ?? panic("Failed to borrow floid identifier.")
+            let bindingStore = user.borrowAddressBindingStore() ?? panic("Failed to borrow address binding store.")
+            let isBinded = bindingStore.isBinded(addrID: addrID)
+            assert((!remove && isBinded) || (remove && !isBinded), message: "The Address id binding state is invalid.")
+
+            self.updateReverseIndex(ReverseIndexType.ThirdPartyChain, key: addrIDKey, address: address, remove: remove)
+        }
+
         // --- Self Only ---
+
+        access(self) fun updateReverseIndex(_ category: ReverseIndexType, key: String, address: Address, remove: Bool) {
+            // ensure record array
+            if self.reverseMapping[category] == nil {
+                self.reverseMapping[category] = {}
+            }
+            let records = (&self.reverseMapping[category] as &{String: {Address: Bool}}?)!
+            if records[key] == nil {
+                records.insert(key: key, {})
+            }
+
+            if remove && records[key]!.containsKey(address) {
+                // to remove address
+                records[key]!.remove(key: address)
+            } else if !remove && !records[key]!.containsKey(address) {
+                // to add address
+                records[key]!.insert(key: address, true)
+            } else {
+                // no update
+                return 
+            }
+
+            emit FloidProtocolReverseIndexUpdated(
+                category: category.rawValue,
+                key: key,
+                address: address,
+                remove: remove
+            )
+        }
     }
 
     // ---- contract methods ----
