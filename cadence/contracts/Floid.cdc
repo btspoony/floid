@@ -59,7 +59,7 @@ pub contract Floid {
 
     // floid generic data type
     pub enum GenericStoreType: UInt8 {
-        pub case AddressesBinding
+        pub case AddressBinding
         pub case KVStore
     }
     
@@ -73,8 +73,13 @@ pub contract Floid {
         }
     }
 
+    // A public interface to address binding store
+    pub resource interface AddressBindingStorePublic {
+
+    }
+
     // third party address binding store
-    pub resource AddressBindingStore: FloidIdentifierStore {
+    pub resource AddressBindingStore: FloidIdentifierStore, AddressBindingStorePublic {
 
         init() {
 
@@ -180,6 +185,10 @@ pub contract Floid {
     pub resource interface FloidIdentifierPublic {
         // get sequence of the identifier
         pub fun getSequence(): UInt256
+        // borrow keyvalue store
+        pub fun borrowKVStore(): &KeyValueStore{KeyValueStorePublic}?
+        // borrow address binding store
+        pub fun borrowAddressBindingStore(): &AddressBindingStore{AddressBindingStorePublic}?
 
         // transfer store by key
         access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidIdentifierStore}
@@ -226,15 +235,41 @@ pub contract Floid {
 
         pub fun resolveView(_ view: Type): AnyStruct? {
             switch view {
-                case Type<MetadataViews.Display>():
-                    // TODO
+            case Type<MetadataViews.Display>():
+                if let store = self.borrowKVStoreFull() {
+                    let name = store.getStringValue("name")
+                    let desc = store.getStringValue("desc")
+                    let image = store.getStringValue("image")
+                    if name != nil && image != nil {
+                        var file: AnyStruct{MetadataViews.File}? = nil
+                        if image!.slice(from: 0, upTo: 4) == "ipfs" {
+                            file = MetadataViews.IPFSFile(cid: image!, path: "")
+                        } else {
+                            file = MetadataViews.HTTPFile(url: image!)
+                        }
+                        return MetadataViews.Display(
+                            name: name!,
+                            description: desc ?? "",
+                            thumbnail: file!
+                        )
+                    }
                     return nil
+                }
+                return nil
             }
             return nil
         }
 
         pub fun getSequence(): UInt256 {
             return self.sequence
+        }
+        
+        pub fun borrowKVStore(): &KeyValueStore{KeyValueStorePublic}? {
+            return self.borrowKVStoreFull() as &KeyValueStore{KeyValueStorePublic}?
+        }
+        
+        pub fun borrowAddressBindingStore(): &AddressBindingStore{AddressBindingStorePublic}? {
+            return self.borrowAddressBindingStoreFull() as &AddressBindingStore{AddressBindingStorePublic}?
         }
 
         // --- Setters - Private Interfaces ---
@@ -383,6 +418,22 @@ pub contract Floid {
                     user: owner.getCapability<&FloidIdentifier{FloidIdentifierPublic}>(Floid.FloidIdentifierPublicPath)
                 )
             }
+        }
+
+        access(self) fun borrowKVStoreFull(): &KeyValueStore? {
+            let store = &self.genericData[GenericStoreType.KVStore] as auth &{FloidIdentifierStore}?
+            if store.isInstance(Type<@KeyValueStore>()) {
+                return store as! &KeyValueStore
+            }
+            return nil
+        }
+
+        access(self) fun borrowAddressBindingStoreFull(): &AddressBindingStore? {
+            let store = &self.genericData[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore}?
+            if store.isInstance(Type<@AddressBindingStore>()) {
+                return store as! &AddressBindingStore
+            }
+            return nil
         }
     }
 
