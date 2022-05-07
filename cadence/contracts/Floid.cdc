@@ -290,6 +290,10 @@ pub contract Floid {
 
             if let arr = self.transferKeys[type] {
                 arr.insert(at: 0, key)
+                // no more than 5 keys
+                if arr.length > 5 {
+                    arr.removeLast()
+                }
             } else {
                 self.transferKeys[type] = [key]
             }
