@@ -91,11 +91,20 @@ pub contract Floid {
 
     }
 
+    // A public interface to kv store
+    pub resource interface KeyValueStorePublic {
+        pub fun getStringValue(_ key: String): String?
+        pub fun getBooleanValue(_ key: String): Bool?
+        pub fun getIntegerValue(_ key: String): Integer?
+        pub fun getFixedPointValue(_ key: String): FixedPoint?
+    }
+
     // key value store
-    pub resource KeyValueStore: FloidIdentifierStore {
+    pub resource KeyValueStore: FloidIdentifierStore, KeyValueStorePublic {
+        access(self) let kvStore: {String: AnyStruct}
 
         init() {
-
+            self.kvStore = {}
         }
 
         // --- Getters - Public Interfaces ---
@@ -104,7 +113,48 @@ pub contract Floid {
             return self.owner!.address
         }
 
+        pub fun getStringValue(_ key: String): String? {
+            let ret = self.kvStore[key]
+            if ret == nil || !ret.isInstance(Type<String>()) {
+                return  nil
+            } else {
+                return ret as! String
+            }
+        }
+
+        pub fun getBooleanValue(_ key: String): Bool? {
+            let ret = self.kvStore[key]
+            if ret == nil || !ret.isInstance(Type<Bool>()) {
+                return  nil
+            } else {
+                return ret as! Bool
+            }
+        }
+
+        pub fun getIntegerValue(_ key: String): Integer? {
+            let ret = self.kvStore[key]
+            if ret == nil || !ret.isInstance(Type<Integer>()) {
+                return  nil
+            } else {
+                return ret as! Integer
+            }
+        }
+
+        pub fun getFixedPointValue(_ key: String): FixedPoint? {
+            let ret = self.kvStore[key]
+            if ret == nil || !ret.isInstance(Type<FixedPoint>()) {
+                return  nil
+            } else {
+                return ret as! FixedPoint
+            }
+        }
+
         // --- Setters - Private Interfaces ---
+
+        // set any value to the kv store
+        pub fun setValue(_ key: String, value: AnyStruct) {
+            self.kvStore[key] = value
+        }
 
         // --- Setters - Contract Only ---
 
