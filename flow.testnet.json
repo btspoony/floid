@@ -1,0 +1,14 @@
+{
+  "accounts": {
+    "testnet-admin": {
+      "address": "${ADMIN_ADDRESS}",
+      "keys": "${FLOW_PRIVATE_KEY}"
+    }
+  },
+  "deployments": {
+    "testnet": {
+      "testnet-admin": [
+      ]
+    }
+  }
+}

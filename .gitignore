@@ -71,6 +71,9 @@ typings/
 # dotenv environment variables file
 .env
 .env.test
+.env.testnet
+.env.testnet.local
+.env.mainnet
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -102,3 +105,12 @@ dist
 
 # TernJS port file
 .tern-port
+
+# env
+.vscode
+.exrc
+.idea/
+
+# emulator datastore
+flowdb
+*-credentials-*

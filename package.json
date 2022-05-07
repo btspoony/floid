@@ -1,0 +1,35 @@
+{
+  "name": "floid",
+  "version": "1.0.0",
+  "description": "a DID Protocol on Flow blockchain",
+  "devDependencies": {
+    "@types/node": "^17.0.31",
+    "dotenv-cli": "^5.1.0"
+  },
+  "scripts": {
+    "update:emulator": "flow project deploy --update",
+    "update:testnet": "npx dotenv-cli -e .env.testnet -- flow project deploy --network=testnet -f flow.json -f flow.testnet.json --update"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlowFans/floid.git"
+  },
+  "keywords": [
+    "Flow",
+    "Cadence",
+    "DID"
+  ],
+  "author": "Tang BoHao<tech@btang.cn>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FlowFans/floid/issues"
+  },
+  "homepage": "https://github.com/FlowFans/floid#readme",
+  "engines": {
+    "node": "16.x"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.0"
+  }
+}

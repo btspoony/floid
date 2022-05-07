@@ -1,0 +1,56 @@
+{
+	"emulators": {
+		"default": {
+			"port": 3569,
+			"serviceAccount": "emulator-account"
+		}
+	},
+  "devWallet": {
+    "accessNode": {
+      "endpoint": "http://localhost:8080"
+    },
+    "port": 8701
+  },
+	"networks": {
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
+	},
+	"accounts": {
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"key": "edf15223cbdbcf8b035821c5eea51bcb2d2ac84805f0f937878e86e22447b66e"
+		}
+	},
+	"contracts": {
+    "NonFungibleToken": {
+      "source": "./cadence/contracts/core/NonFungibleToken.cdc",
+      "aliases": {
+        "emulator": "0xf8d6e0586b0a20c7",
+        "testnet": "0x631e88ae7f1d7c20"
+      }
+    },
+    "MetadataViews": {
+      "source": "./cadence/contracts/core/MetadataViews.cdc",
+      "aliases": {
+        "testnet": "0x631e88ae7f1d7c20"
+      }
+    },
+    "FungibleToken": {
+      "source": "./cadence/contracts/core/FungibleToken.cdc",
+      "aliases": {
+        "emulator": "0xee82856bf20e2aa6",
+        "testnet": "0x9a0766d93b6608b7"
+      }
+    }
+	},
+	"deployments": {
+    "emulator": {
+      "emulator-account": [
+        "NonFungibleToken",
+        "MetadataViews"
+      ]
+    }
+	}
+}
+ 
