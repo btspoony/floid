@@ -13,7 +13,7 @@ todo
 todo
 
 */
-
+import Crypto
 import MetadataViews from "./core/MetadataViews.cdc"
 
 pub contract Floid {
@@ -38,6 +38,9 @@ pub contract Floid {
     pub event ContractInitialized()
 
     pub event FloidIdentifierCreated(sequence: UInt256)
+    pub event FloidIdentifierRegistered(owner: Address, sequence: UInt256)
+    pub event FloidIdentifierStoreTransferKeyGenerated(owner: Address, storeType: UInt8, key: String)
+    pub event FloidIdentifierStoreTransfered(sender: Address, storeType: UInt8, recipient: Address)
 
     /**    ____ ___ ____ ___ ____
        *   [__   |  |__|  |  |___
@@ -175,17 +178,17 @@ pub contract Floid {
 
     // A public interface to Floid identifier
     pub resource interface FloidIdentifierPublic {
-        // // borrow the identifier store
-        // pub fun borrowStore(type: GenericStoreType): &{FloidIdentifierStore}?
+        // get sequence of the identifier
+        pub fun getSequence(): UInt256
 
         // transfer store by key
-        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String): @{FloidIdentifierStore}
+        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidIdentifierStore}
     }
     
     // A private interface to Floid identifier
     pub resource interface FloidIdentifierPrivate {
         // inherit data from another Floid identifier 
-        pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String)
+        pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature)
         // generate a transfer key to start a data transfer to another Floid identifier 
         pub fun generateTransferKey(type: GenericStoreType): String
     }
@@ -230,27 +233,34 @@ pub contract Floid {
             return nil
         }
 
-        // pub fun borrowStore(type: GenericStoreType): &{FloidIdentifierStore}? {
-        //     return &self.genericData[type] as &{FloidIdentifierStore}?
-        // }
+        pub fun getSequence(): UInt256 {
+            return self.sequence
+        }
 
         // --- Setters - Private Interfaces ---
 
         // inherit data from another Floid identifier 
-        pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String) {
+        pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature) {
             pre {
                 self.genericData[type] == nil: "Only 'nil' resource can be inherited"
             }
+            // first ensure registered
+            self.ensureRegistered()
+
             let sender = getAccount(from)
                 .getCapability(Floid.FloidIdentifierPublicPath)
                 .borrow<&FloidIdentifier{FloidIdentifierPublic}>()
                 ?? panic("Failed to borrow identifier of sender address")
 
-            let store <- sender.transferStoreByKey(type: type, transferKey: transferKey)
+            let store <- sender.transferStoreByKey(type: type, transferKey: transferKey, sigTag: sigTag, sigData: sigData)
             self.genericData[type] <-! store
-        }
 
-        // --- Setters - Resource Only ---
+            emit FloidIdentifierStoreTransfered(
+                sender: from,
+                storeType: type.rawValue,
+                recipient: self.owner!.address
+            )
+        }
 
         // generate a transfer key
         pub fun generateTransferKey(type: GenericStoreType): String {
@@ -260,6 +270,8 @@ pub contract Floid {
             post {
                 self.transferKeys[type]!.length <= 5: "Too many transfer keys"
             }
+            // first ensure registered
+            self.ensureRegistered()
 
             let block = getCurrentBlock()
             let blockId = block.id
@@ -281,8 +293,16 @@ pub contract Floid {
             } else {
                 self.transferKeys[type] = [key]
             }
+
+            emit FloidIdentifierStoreTransferKeyGenerated(
+                owner: self.owner!.address,
+                storeType: type.rawValue,
+                key: keyString
+            )
             return keyString
         }
+
+        // --- Setters - Resource Only ---
 
         // clear a store
         pub fun clearStore(type: GenericStoreType) {
@@ -293,11 +313,21 @@ pub contract Floid {
         // --- Setters - Contract Only ---
 
         // transfer data to another Floid identifier 
-        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String): @{FloidIdentifierStore} {
+        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidIdentifierStore} {
             pre {
                 self.genericData[type] != nil: "The store resource doesn't exist"
             }
             assert(self.verifyTransferKey(type: type, transferKey: transferKey), message: "Invalid transferKey: ".concat(transferKey))
+
+            // verify signature
+            let keyToVerify = self.owner!.keys.get(keyIndex: sigData.keyIndex) ?? panic("Failed to get account public key")
+            let isValid = keyToVerify.publicKey.verify(
+                signature: sigData.signature,
+                signedData: transferKey.decodeHex(), // transfer key is the message
+                domainSeparationTag: sigTag,
+                hashAlgorithm: keyToVerify.hashAlgorithm
+            )
+            assert(isValid, message: "Signature of transfer key is invalid.")
 
             // move store
             let store <- self.genericData.remove(key: type) ?? panic("Missing data store")
@@ -321,6 +351,7 @@ pub contract Floid {
 
         // --- Self Only ---
 
+        // verify transferKey
         access(self) fun verifyTransferKey(type: GenericStoreType, transferKey: String): Bool {
             pre {
                 self.transferKeys[type] != nil: "cannot find transfer key."
@@ -337,19 +368,77 @@ pub contract Floid {
             }
             return isValid
         }
+
+        // ensure the identifier is registered to protocol
+        access(self) fun ensureRegistered() {
+            let owner = self.owner ?? panic("Missing owner, identifier is not in user storage.")
+
+            let protocol = Floid.borrowProtocolPublic()
+            if !protocol.isRegistered(user: owner.address) {
+                protocol.registerIdentifier(
+                    user: owner.getCapability<&FloidIdentifier{FloidIdentifierPublic}>(Floid.FloidIdentifierPublicPath)
+                )
+            }
+        }
     }
 
     // A public interface to Floid Protocol
     pub resource interface FloidProtocolPublic {
+        // borrow users' identifier
+        pub fun borrowIdentifier(sequence: UInt256): &FloidIdentifier{FloidIdentifierPublic}?
+        // check if registered to Protocol
+        pub fun isRegistered(user: Address): Bool
 
+        // register users' identifier
+        access(contract) fun registerIdentifier(user: Capability<&FloidIdentifier{FloidIdentifierPublic}>)
     }
 
     // Resource of the Floid Protocol
     pub resource FloidProtocol: FloidProtocolPublic {
+        // all registered identifiers
+        access(self) let registeredAddresses: [Address]
+        // all capabilities
+        access(self) let registeredCapabilities: {UInt256: Capability<&FloidIdentifier{FloidIdentifierPublic}>}
 
         init() {
-
+            self.registeredAddresses = []
+            self.registeredCapabilities = {}
         }
+
+        // --- Getters - Public Interfaces ---
+
+        pub fun isRegistered(user: Address): Bool {
+            return self.registeredAddresses.contains(user)
+        }
+
+        pub fun borrowIdentifier(sequence: UInt256): &FloidIdentifier{FloidIdentifierPublic}? {
+            if let cap = self.registeredCapabilities[sequence] {
+                return cap.borrow()
+            }
+            return nil
+        }
+
+        // --- Setters - Private Interfaces ---
+
+        // --- Setters - Contract Only ---
+
+        access(contract) fun registerIdentifier(user: Capability<&FloidIdentifier{FloidIdentifierPublic}>) {
+            pre {
+                !self.registeredAddresses.contains(user.address): "Address already registered."
+            }
+            let ref = user.borrow() ?? panic("Cannot borrow identifier public reference.")
+            let seq = ref.getSequence()
+
+            self.registeredAddresses.append(user.address)
+            self.registeredCapabilities.insert(key: seq, user)
+
+            emit FloidIdentifierRegistered(
+                owner: user.address,
+                sequence: seq
+            )
+        }
+
+        // --- Self Only ---
     }
 
     // ---- contract methods ----
@@ -363,8 +452,15 @@ pub contract Floid {
     }
 
     // create a resource instance of FloidIdentifier
-    pub fun createIdentifier(acct: Address): @FloidIdentifier {
+    pub fun createIdentifier(): @FloidIdentifier {
         return <- create FloidIdentifier()
+    }
+
+    // borrow the public identifier by address
+    pub fun borrowIdentifier(user: Address): &FloidIdentifier{FloidIdentifierPublic}? {
+        return getAccount(user)
+            .getCapability(self.FloidIdentifierPublicPath)
+            .borrow<&FloidIdentifier{FloidIdentifierPublic}>()
     }
 
     init() {
