@@ -43,7 +43,7 @@ pub contract FloidUtils {
         }
 
         // generate a new message with expire time
-        pub fun generateNewMessage(expireIn: UFix64): String {
+        pub fun generateNewMessage(expireIn: UFix64, prefix: String?): String {
             post {
                 self.messages.length <= self.maxLengh: "Too many messages"
             }
@@ -59,7 +59,7 @@ pub contract FloidUtils {
                 i = i + 1
             }
 
-            let keyString = String.encodeHex(idArr)
+            let keyString = (prefix ?? "").concat(String.encodeHex(idArr))
             let key = ExpirableMessage(keyString, expire: blockTime + expireIn)
 
             self.messages.insert(at: 0, key)

@@ -59,7 +59,8 @@ pub contract AddressBindingStore {
         // generate a new binding message to verify
         pub fun generateBindingMessage(): String {
             let fifteenMin: UFix64 = 1000.0 * 60.0 * 15.0
-            let keyString = self.pendingMessages.generateNewMessage(expireIn: fifteenMin)
+            let prefix = "Binding <0x".concat(self.getOwner().toString()).concat("> - Code: ")
+            let keyString = self.pendingMessages.generateNewMessage(expireIn: fifteenMin, prefix: prefix)
 
             emit FloidABStoreMessageGenerated(
                 owner: self.getOwner(),
