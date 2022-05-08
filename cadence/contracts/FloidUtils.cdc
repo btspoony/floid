@@ -1,3 +1,8 @@
+/**
+
+# The contract of Floid Utilities
+
+*/
 
 pub contract FloidUtils {
 
@@ -106,3 +111,4 @@ pub contract FloidUtils {
     }
 
 }
+ 

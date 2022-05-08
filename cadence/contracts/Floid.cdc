@@ -17,6 +17,9 @@ todo
 import Crypto
 import MetadataViews from "./core/MetadataViews.cdc"
 import FloidUtils from "./FloidUtils.cdc"
+import FloidIdentifierStore from "./FloidIdentifierStore.cdc"
+import KeyValueStore from "./floid-stores/KeyValueStore.cdc"
+import AddressBindingStore from "./floid-stores/AddressBindingStore.cdc"
 
 pub contract Floid {
 
@@ -62,200 +65,10 @@ pub contract Floid {
         *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
          ***********************************************************/
 
-    // enum for supported chain type
-    pub enum SupportedChainType: UInt8 {
-        pub case EVM_COMPATIBLE
-    }
-
-    // Struct of Third party Address ID
-    pub struct AddressID {
-        pub let chain: SupportedChainType
-        pub let address: String
-        pub let referID: String?
-
-        init(_ chain: SupportedChainType, address: String, referID: String?) {
-            self.chain = chain
-            self.address = address
-            self.referID = referID
-        }
-
-        // get the identify string of chain id
-        pub fun getChainID(): String {
-            var chainID: String = "chainstd"
-            switch self.chain {
-            case SupportedChainType.EVM_COMPATIBLE:
-                chainID = "eip155"
-                break
-            }
-            return chainID.concat(":").concat(self.referID ?? "<x>")
-        }
-
-        // get the identify string of the address
-        pub fun toString(): String {
-            return self.getChainID().concat(":").concat(self.address)
-        }
-    }
-
-    // parse Address id from string
-    access(contract) fun parseAddressID(str: String): AddressID? {
-        let parseIdx: [Int; 2] = [-1,-1]
-        var i = 0
-        var cnt = 0
-        while i < str.length {
-            if str[i] == ":" {
-                if cnt >= 2 {
-                    return nil
-                }
-                parseIdx[cnt] = i
-                cnt = cnt + 1
-            }
-            i = i + 1
-        }
-        if parseIdx[0] < 0 || parseIdx[1] < 0 {
-            return nil
-        }
-
-        let chainID = str.slice(from: 0, upTo: parseIdx[0])
-        var chain: SupportedChainType? = nil
-        switch chainID {
-        case "eip155":
-            chain = SupportedChainType.EVM_COMPATIBLE
-            break
-        }
-        if chain == nil {
-            return nil
-        }
-        return AddressID(chain!, address: str.slice(from: parseIdx[1], upTo: str.length), referID: str.slice(from: parseIdx[0], upTo: parseIdx[1]))
-    }
-
     // floid generic data type
     pub enum GenericStoreType: UInt8 {
-        pub case AddressBinding
         pub case KVStore
-    }
-    
-    // A public interface to Floid identifier
-    pub resource interface FloidIdentifierStore {
-        // get owner address
-        pub fun getOwner(): Address {
-            pre {
-                self.owner != nil: "When invoke this method, owner should not be nil."
-            }
-        }
-    }
-
-    // A public interface to address binding store
-    pub resource interface AddressBindingStorePublic {
-        // check if address id is binded 
-        pub fun isBinded(addrID: AddressID): Bool
-    }
-
-    // third party address binding store
-    pub resource AddressBindingStore: FloidIdentifierStore, AddressBindingStorePublic {
-        // mapping of the binding AddressID {chainID: {addressID: AddressID}}
-        access(self) let bindingMap: {String: {String: AddressID}}
-        // all pending messages
-        access(self) let pendingMessages: FloidUtils.VerifiableMessages
-
-        init() {
-            self.bindingMap = {}
-            self.pendingMessages = FloidUtils.VerifiableMessages(25)
-        }
-
-        // --- Getters - Public Interfaces ---
-
-        pub fun getOwner(): Address {
-            return self.owner!.address
-        }
-
-        pub fun isBinded(addrID: AddressID): Bool {
-            if let addresses = self.bindingMap[addrID.getChainID()] {
-                return addresses.containsKey(addrID.toString())
-            }
-            return false
-        }
-
-        // --- Setters - Resource Interfaces ---
-
-        // pub fun generateBindingMessage(): String {
-
-        // }
-
-        // --- Setters - Contract Only ---
-
-        // --- Self Only ---
-
-    }
-
-    // A public interface to kv store
-    pub resource interface KeyValueStorePublic {
-        pub fun getStringValue(_ key: String): String?
-        pub fun getBooleanValue(_ key: String): Bool?
-        pub fun getIntegerValue(_ key: String): Integer?
-        pub fun getFixedPointValue(_ key: String): FixedPoint?
-    }
-
-    // key value store
-    pub resource KeyValueStore: FloidIdentifierStore, KeyValueStorePublic {
-        access(self) let kvStore: {String: AnyStruct}
-
-        init() {
-            self.kvStore = {}
-        }
-
-        // --- Getters - Public Interfaces ---
-
-        pub fun getOwner(): Address {
-            return self.owner!.address
-        }
-
-        pub fun getStringValue(_ key: String): String? {
-            let ret = self.kvStore[key]
-            if ret == nil || !ret.isInstance(Type<String>()) {
-                return  nil
-            } else {
-                return ret as! String
-            }
-        }
-
-        pub fun getBooleanValue(_ key: String): Bool? {
-            let ret = self.kvStore[key]
-            if ret == nil || !ret.isInstance(Type<Bool>()) {
-                return  nil
-            } else {
-                return ret as! Bool
-            }
-        }
-
-        pub fun getIntegerValue(_ key: String): Integer? {
-            let ret = self.kvStore[key]
-            if ret == nil || !ret.isInstance(Type<Integer>()) {
-                return  nil
-            } else {
-                return ret as! Integer
-            }
-        }
-
-        pub fun getFixedPointValue(_ key: String): FixedPoint? {
-            let ret = self.kvStore[key]
-            if ret == nil || !ret.isInstance(Type<FixedPoint>()) {
-                return  nil
-            } else {
-                return ret as! FixedPoint
-            }
-        }
-
-        // --- Setters - Resource Interfaces ---
-
-        // set any value to the kv store
-        pub fun setValue(_ key: String, value: AnyStruct) {
-            self.kvStore[key] = value
-        }
-
-        // --- Setters - Contract Only ---
-
-        // --- Self Only ---
-
+        pub case AddressBinding
     }
 
     // A public interface to Floid identifier
@@ -263,12 +76,12 @@ pub contract Floid {
         // get sequence of the identifier
         pub fun getSequence(): UInt256
         // borrow keyvalue store
-        pub fun borrowKVStore(): &KeyValueStore{KeyValueStorePublic}?
+        pub fun borrowKVStore(): &KeyValueStore.Store{KeyValueStore.PublicInterface}?
         // borrow address binding store
-        pub fun borrowAddressBindingStore(): &AddressBindingStore{AddressBindingStorePublic}?
+        pub fun borrowAddressBindingStore(): &AddressBindingStore.Store{AddressBindingStore.PublicInterface}?
 
         // transfer store by key
-        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidIdentifierStore}
+        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @FloidIdentifierStore.Store{FloidIdentifierStore.StorePublic}
     }
     
     // A private interface to Floid identifier
@@ -286,7 +99,7 @@ pub contract Floid {
         // global sequence number
         pub let sequence: UInt256
         // a storage of generic data
-        pub let genericStores: @{GenericStoreType: {FloidIdentifierStore}}
+        pub let genericStores: @{GenericStoreType: FloidIdentifierStore.Store{FloidIdentifierStore.StorePublic}}
         // transfer keys
         access(self) let transferKeys: {GenericStoreType: FloidUtils.VerifiableMessages}
 
@@ -343,28 +156,28 @@ pub contract Floid {
             return self.sequence
         }
         
-        pub fun borrowKVStore(): &KeyValueStore{KeyValueStorePublic}? {
-            return self.borrowKVStoreFull() as &KeyValueStore{KeyValueStorePublic}?
+        pub fun borrowKVStore(): &KeyValueStore.Store{KeyValueStore.PublicInterface}? {
+            return self.borrowKVStoreFull() as &KeyValueStore.Store{KeyValueStore.PublicInterface}?
         }
         
-        pub fun borrowAddressBindingStore(): &AddressBindingStore{AddressBindingStorePublic}? {
-            return self.borrowAddressBindingStoreFull() as &AddressBindingStore{AddressBindingStorePublic}?
+        pub fun borrowAddressBindingStore(): &AddressBindingStore.Store{AddressBindingStore.PublicInterface}? {
+            return self.borrowAddressBindingStoreFull() as &AddressBindingStore.Store{AddressBindingStore.PublicInterface}?
         }
 
         // --- Setters - Private Interfaces ---
 
         pub fun initializeStore(type: GenericStoreType) {
-            pre {
-                self.genericStores[type] == nil: "Only 'nil' resource can be initialized"
-            }
-            switch type {
-            case GenericStoreType.KVStore:
-                self.genericStores[GenericStoreType.KVStore] <-! create KeyValueStore()
-                break
-            case GenericStoreType.AddressBinding:
-                self.genericStores[GenericStoreType.AddressBinding] <-! create AddressBindingStore()
-                break
-            }
+            // pre {
+            //     self.genericStores[type] == nil: "Only 'nil' resource can be initialized"
+            // }
+            // switch type {
+            // case GenericStoreType.KVStore:
+            //     self.genericStores[GenericStoreType.KVStore] <-! KeyValueStore.createStore()
+            //     break
+            // case GenericStoreType.AddressBinding:
+            //     self.genericStores[GenericStoreType.AddressBinding] <-! create AddressBindingStore()
+            //     break
+            // }
 
             emit FloidIdentifierStoreInitialized(
                 owner: self.owner!.address,
@@ -424,18 +237,18 @@ pub contract Floid {
             destroy store
         }
 
-        pub fun borrowKVStoreFull(): &KeyValueStore? {
-            let store = &self.genericStores[GenericStoreType.KVStore] as auth &{FloidIdentifierStore}?
-            if store.isInstance(Type<@KeyValueStore>()) {
-                return store as! &KeyValueStore
+        pub fun borrowKVStoreFull(): &KeyValueStore.Store? {
+            let store = &self.genericStores[GenericStoreType.KVStore] as auth &{FloidIdentifierStore.StorePublic}?
+            if store.isInstance(Type<@KeyValueStore.Store>()) {
+                return store as! &KeyValueStore.Store
             }
             return nil
         }
 
-        pub fun borrowAddressBindingStoreFull(): &AddressBindingStore? {
-            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore}?
-            if store.isInstance(Type<@AddressBindingStore>()) {
-                return store as! &AddressBindingStore
+        pub fun borrowAddressBindingStoreFull(): &AddressBindingStore.Store? {
+            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore.StorePublic}?
+            if store.isInstance(Type<@AddressBindingStore.Store>()) {
+                return store as! &AddressBindingStore.Store
             }
             return nil
         }
@@ -443,7 +256,7 @@ pub contract Floid {
         // --- Setters - Contract Only ---
 
         // transfer data to another Floid identifier 
-        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidIdentifierStore} {
+        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @FloidIdentifierStore.Store{FloidIdentifierStore.StorePublic} {
             pre {
                 self.genericStores[type] != nil: "The store resource doesn't exist"
                 self.transferKeys[type] != nil: "cannot find transfer key."
@@ -506,7 +319,7 @@ pub contract Floid {
         // register users' identifier
         access(contract) fun registerIdentifier(user: Capability<&FloidIdentifier{FloidIdentifierPublic}>)
         // update reverse index
-        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressID, address: Address, remove: Bool)
+        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressBindingStore.AddressID, address: Address, remove: Bool)
     }
 
     // Resource of the Floid Protocol
@@ -594,7 +407,7 @@ pub contract Floid {
             )
         }
 
-        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressID, address: Address, remove: Bool) {
+        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressBindingStore.AddressID, address: Address, remove: Bool) {
             pre {
                 self.registeredAddresses.contains(address): "Address should be registered already."
             }
