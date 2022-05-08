@@ -20,7 +20,7 @@ pub contract FloidProtocol {
          *************************/
 
     pub let FloidProtocolStoragePath: StoragePath
-    pub let ProtocolPublicPath: PublicPath
+    pub let FloidProtocolPublicPath: PublicPath
 
     /**    ____ _  _ ____ _  _ ___ ____
        *   |___ |  | |___ |\ |  |  [__
@@ -63,27 +63,33 @@ pub contract FloidProtocol {
         // ---- contract methods ----
         // register users' identifier
         access(account) fun registerIdentifier(user: Capability<&{FloidInterface.IdentifierPublic}>)
+        // update reverse index
+        access(account) fun updateReverseIndex(
+            _ category: ReverseIndexType,
+            key: String,
+            address: Address,
+            remove: Bool,
+            ensureRegistered: Bool,
+            requiredStore: UInt8?,
+        )
     }
 
     // Resource of the Floid Protocol
     pub resource Protocol: ProtocolPublic {
-        // all registered identifiers
-        access(self) let registeredAddresses: [Address]
         // all capabilities
-        access(self) let registeredCapabilities: {UInt256: Capability<&{FloidInterface.IdentifierPublic}>}
+        access(self) let registered: {Address: Capability<&{FloidInterface.IdentifierPublic}>}
         // reverse indexes
         access(self) let reverseMapping: {ReverseIndexType: {String: {Address: Bool}}}
 
         init() {
-            self.registeredAddresses = []
-            self.registeredCapabilities = {}
+            self.registered = {}
             self.reverseMapping = {}
         }
 
         // --- Getters - Public Interfaces ---
 
         pub fun isRegistered(user: Address): Bool {
-            return self.registeredAddresses.contains(user)
+            return self.registered.keys.contains(user)
         }
 
         pub fun getReverseBindings(_ category: ReverseIndexType, key: String): [Address] {
@@ -119,7 +125,9 @@ pub contract FloidProtocol {
                     ReverseIndexType.KeyToAddresses,
                     key: availableKeys[i],
                     address: address,
-                    remove: removeOrNot[i]
+                    remove: removeOrNot[i],
+                    ensureRegistered: false,
+                    requiredStore: nil
                 )
                 i = i + 1
             }
@@ -129,13 +137,12 @@ pub contract FloidProtocol {
 
         access(account) fun registerIdentifier(user: Capability<&{FloidInterface.IdentifierPublic}>) {
             pre {
-                !self.registeredAddresses.contains(user.address): "Address already registered."
+                !self.isRegistered(user: user.address): "Address already registered."
             }
             let ref = user.borrow() ?? panic("Cannot borrow identifier public reference.")
             let seq = ref.getSequence()
 
-            self.registeredAddresses.append(user.address)
-            self.registeredCapabilities.insert(key: seq, user)
+            self.registered.insert(key: user.address, user)
 
             emit FloidProtocolIdentifierRegistered(
                 owner: user.address,
@@ -143,9 +150,25 @@ pub contract FloidProtocol {
             )
         }
 
-        // --- Self Only ---
+        // update reverse index
+        access(account) fun updateReverseIndex(
+            _ category: ReverseIndexType,
+            key: String,
+            address: Address,
+            remove: Bool,
+            ensureRegistered: Bool,
+            requiredStore: UInt8?,
+        ) {
+            // ensure registered
+            if ensureRegistered {
+                let cap = self.registered[address] ?? panic("Address is not registered")
+                assert(cap.address == address, message: "address should be same")
+                let user = cap.borrow() ?? panic("Failed to borrow identifier.")
+                if let storeId = requiredStore {
+                    user.borrowStore(key: storeId)
+                }
+            }
 
-        access(self) fun updateReverseIndex(_ category: ReverseIndexType, key: String, address: Address, remove: Bool) {
             // ensure record array
             if self.reverseMapping[category] == nil {
                 self.reverseMapping[category] = {}
@@ -173,14 +196,17 @@ pub contract FloidProtocol {
                 remove: remove
             )
         }
+
+        // --- Self Only ---
+
     }
 
     // ---- contract methods ----
 
     // borrow the public interface
     pub fun borrowProtocolPublic(): &Protocol{ProtocolPublic} {
-        return getAccount(FloidProtocol.contractAddress)
-            .getCapability(FloidProtocol.ProtocolPublicPath)
+        return getAccount(self.contractAddress)
+            .getCapability(self.FloidProtocolPublicPath)
             .borrow<&Protocol{ProtocolPublic}>()
             ?? panic("Failed to borrow protocol public.")
     }
@@ -191,12 +217,12 @@ pub contract FloidProtocol {
 
         // paths
         self.FloidProtocolStoragePath = /storage/FloidProtocolPath
-        self.ProtocolPublicPath = /public/FloidProtocolPath
+        self.FloidProtocolPublicPath = /public/FloidProtocolPath
 
         // create resource and link the public capability
         self.account.save(<- create Protocol(), to: self.FloidProtocolStoragePath)
         self.account.link<&Protocol{ProtocolPublic}>(
-            self.ProtocolPublicPath,
+            self.FloidProtocolPublicPath,
             target: self.FloidProtocolStoragePath
         )
 

@@ -87,7 +87,7 @@ pub contract FloidUtils {
             let keyToVerify = PublicKey(publicKey: publicKey, signatureAlgorithm: signatureAlgorithm)
             let isValid = keyToVerify.verify(
                 signature: signature,
-                signedData: messageToVerify.decodeHex(),
+                signedData: messageToVerify.utf8,
                 domainSeparationTag: hashTag ?? "",
                 hashAlgorithm: hashAlgorithm
             )

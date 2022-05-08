@@ -295,27 +295,6 @@ pub contract Floid: FloidInterface {
         }
     }
 
-    // access(account) fun updateThirdPartyChainReverseIndex(addrID: FloidUtils.AddressID, address: Address, remove: Bool) {
-    //     pre {
-    //         self.registeredAddresses.contains(address): "Address should be registered already."
-    //     }
-    //     let addrIDKey = addrID.toString()
-    //     let currentBindings = self.getReverseBindings(ReverseIndexType.ThirdPartyChain, key: addrIDKey)
-    //     if !remove && currentBindings.length > 0 {
-    //         panic("Only one address can be binding to same AddressID")
-    //     } else if remove && !currentBindings.contains(address) {
-    //         return
-    //     }
-
-    //     // check binding in the identifier
-    //     let user = Floid.borrowIdentifier(user: address) ?? panic("Failed to borrow floid identifier.")
-    //     let bindingStore = user.borrowAddressBindingStore() ?? panic("Failed to borrow address binding store.")
-    //     let isBinded = bindingStore.isBinded(addrID: addrID)
-    //     assert((!remove && isBinded) || (remove && !isBinded), message: "The Address id binding state is invalid.")
-
-    //     self.updateReverseIndex(ReverseIndexType.ThirdPartyChain, key: addrIDKey, address: address, remove: remove)
-    // }
-
     // ---- contract methods ----
 
     // create a resource instance of FloidIdentifier

@@ -12,7 +12,7 @@ pub contract KeyValueStore {
         *  |___  \/  |___ | \|  |  ___]
          ******************************/
 
-    pub event FloidKeyValueStoreUpdated(owner: Address, key: String, valueType: String)
+    pub event FloidKVStoreUpdated(owner: Address, key: String, valueType: String)
 
     /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
        *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
@@ -83,7 +83,7 @@ pub contract KeyValueStore {
         pub fun setValue(_ key: String, value: AnyStruct) {
             self.kvStore[key] = value
 
-            emit FloidKeyValueStoreUpdated(
+            emit FloidKVStoreUpdated(
                 owner: self.getOwner(),
                 key: key,
                 valueType: value.getType().identifier
