@@ -38,6 +38,7 @@ pub contract Floid {
     pub event ContractInitialized()
 
     pub event FloidIdentifierCreated(sequence: UInt256)
+    pub event FloidIdentifierStoreInitialized(owner: Address, storeType: UInt8)
     pub event FloidIdentifierStoreTransferKeyGenerated(owner: Address, storeType: UInt8, key: String)
     pub event FloidIdentifierStoreTransfered(sender: Address, storeType: UInt8, recipient: Address)
 
@@ -370,6 +371,8 @@ pub contract Floid {
     
     // A private interface to Floid identifier
     pub resource interface FloidIdentifierPrivate {
+        // initialize a new store
+        pub fun initializeStore(type: GenericStoreType)
         // inherit data from another Floid identifier 
         pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature)
         // generate a transfer key to start a data transfer to another Floid identifier 
@@ -381,13 +384,13 @@ pub contract Floid {
         // global sequence number
         pub let sequence: UInt256
         // a storage of generic data
-        pub let genericData: @{GenericStoreType: {FloidIdentifierStore}}
+        pub let genericStores: @{GenericStoreType: {FloidIdentifierStore}}
         // transfer keys
         access(self) let transferKeys: {GenericStoreType: VerifiableMessages}
 
         init() {
             self.sequence = Floid.totalIdentifiers
-            self.genericData <- {}
+            self.genericStores <- {}
             self.transferKeys = {}
 
             emit FloidIdentifierCreated(sequence: self.sequence)
@@ -396,7 +399,7 @@ pub contract Floid {
         }
 
         destroy() {
-            destroy self.genericData
+            destroy self.genericStores
         }
 
         // --- Getters - Public Interfaces ---
@@ -448,10 +451,29 @@ pub contract Floid {
 
         // --- Setters - Private Interfaces ---
 
+        pub fun initializeStore(type: GenericStoreType) {
+            pre {
+                self.genericStores[type] == nil: "Only 'nil' resource can be initialized"
+            }
+            switch type {
+            case GenericStoreType.KVStore:
+                self.genericStores[GenericStoreType.KVStore] <-! create KeyValueStore()
+                break
+            case GenericStoreType.AddressBinding:
+                self.genericStores[GenericStoreType.AddressBinding] <-! create AddressBindingStore()
+                break
+            }
+
+            emit FloidIdentifierStoreInitialized(
+                owner: self.owner!.address,
+                storeType: type.rawValue
+            )
+        }
+
         // inherit data from another Floid identifier 
         pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature) {
             pre {
-                self.genericData[type] == nil: "Only 'nil' resource can be inherited"
+                self.genericStores[type] == nil: "Only 'nil' resource can be inherited"
             }
             // first ensure registered
             self.ensureRegistered()
@@ -462,7 +484,7 @@ pub contract Floid {
                 ?? panic("Failed to borrow identifier of sender address")
 
             let store <- sender.transferStoreByKey(type: type, transferKey: transferKey, sigTag: sigTag, sigData: sigData)
-            self.genericData[type] <-! store
+            self.genericStores[type] <-! store
 
             emit FloidIdentifierStoreTransfered(
                 sender: from,
@@ -473,7 +495,7 @@ pub contract Floid {
 
         // generate a transfer key
         pub fun generateTransferKey(type: GenericStoreType): String {pre {
-                self.genericData[type] != nil: "The store resource doesn't exist"
+                self.genericStores[type] != nil: "The store resource doesn't exist"
             }
             // first ensure registered
             self.ensureRegistered()
@@ -496,7 +518,7 @@ pub contract Floid {
 
         // clear a store
         pub fun clearStore(type: GenericStoreType) {
-            let store <- self.genericData.remove(key: type) ?? panic("Missing data store")
+            let store <- self.genericStores.remove(key: type) ?? panic("Missing data store")
             destroy store
         }
 
@@ -505,7 +527,7 @@ pub contract Floid {
         // transfer data to another Floid identifier 
         access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidIdentifierStore} {
             pre {
-                self.genericData[type] != nil: "The store resource doesn't exist"
+                self.genericStores[type] != nil: "The store resource doesn't exist"
                 self.transferKeys[type] != nil: "cannot find transfer key."
             }
             assert(self.transferKeys[type]!.isMessageValid(message: transferKey), message: "Invalid transferKey: ".concat(transferKey))
@@ -525,7 +547,7 @@ pub contract Floid {
             assert(isValid, message: "Signature of transfer key is invalid.")
 
             // move store
-            let store <- self.genericData.remove(key: type) ?? panic("Missing data store")
+            let store <- self.genericStores.remove(key: type) ?? panic("Missing data store")
 
             // return store
             return <- store
@@ -546,7 +568,7 @@ pub contract Floid {
         }
 
         access(self) fun borrowKVStoreFull(): &KeyValueStore? {
-            let store = &self.genericData[GenericStoreType.KVStore] as auth &{FloidIdentifierStore}?
+            let store = &self.genericStores[GenericStoreType.KVStore] as auth &{FloidIdentifierStore}?
             if store.isInstance(Type<@KeyValueStore>()) {
                 return store as! &KeyValueStore
             }
@@ -554,7 +576,7 @@ pub contract Floid {
         }
 
         access(self) fun borrowAddressBindingStoreFull(): &AddressBindingStore? {
-            let store = &self.genericData[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore}?
+            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore}?
             if store.isInstance(Type<@AddressBindingStore>()) {
                 return store as! &AddressBindingStore
             }
