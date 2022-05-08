@@ -4,36 +4,30 @@
 
 > Author: Bohao Tang<tech@btang.cn>
 
-## `FloidProtocol` resource
-
-A public 
-
 ## `FloidIdentifier` resource
 
-todo
+a soul-bound resource with multiply data store
 
 */
 
 import Crypto
 import MetadataViews from "./core/MetadataViews.cdc"
 import FloidUtils from "./FloidUtils.cdc"
-import FloidIdentifierStore from "./FloidIdentifierStore.cdc"
+import FloidInterface from "./FloidInterface.cdc"
+import FloidProtocol from "./FloidProtocol.cdc"
 import KeyValueStore from "./floid-stores/KeyValueStore.cdc"
 import AddressBindingStore from "./floid-stores/AddressBindingStore.cdc"
 
-pub contract Floid {
+pub contract Floid: FloidInterface {
 
     /**    ___  ____ ___ _  _ ____
        *   |__] |__|  |  |__| [__
         *  |    |  |  |  |  | ___]
          *************************/
 
-    pub let FloidProtocolStoragePath: StoragePath
-    pub let FloidProtocolPublicPath: PublicPath
-
-    pub let FloidIdentifierStoragePath: StoragePath
-    pub let FloidIdentifierPrivatePath: PrivatePath
-    pub let FloidIdentifierPublicPath: PublicPath
+    pub let FloidStoragePath: StoragePath
+    pub let FloidPrivatePath: PrivatePath
+    pub let FloidPublicPath: PublicPath
 
     /**    ____ _  _ ____ _  _ ___ ____
        *   |___ |  | |___ |\ |  |  [__
@@ -42,13 +36,10 @@ pub contract Floid {
 
     pub event ContractInitialized()
 
-    pub event FloidIdentifierCreated(sequence: UInt256)
-    pub event FloidIdentifierStoreInitialized(owner: Address, storeType: UInt8)
-    pub event FloidIdentifierStoreTransferKeyGenerated(owner: Address, storeType: UInt8, key: String)
-    pub event FloidIdentifierStoreTransfered(sender: Address, storeType: UInt8, recipient: Address)
-
-    pub event FloidProtocolIdentifierRegistered(owner: Address, sequence: UInt256)
-    pub event FloidProtocolReverseIndexUpdated(category: UInt8, key: String, address: Address, remove: Bool)
+    pub event FloidCreated(sequence: UInt256)
+    pub event FloidStoreInitialized(owner: Address, storeType: UInt8)
+    pub event FloidStoreTransferKeyGenerated(owner: Address, storeType: UInt8, key: String)
+    pub event FloidStoreTransfered(sender: Address, storeType: UInt8, recipient: Address)
 
     /**    ____ ___ ____ ___ ____
        *   [__   |  |__|  |  |___
@@ -57,13 +48,6 @@ pub contract Floid {
 
     // total identifier created
     pub var totalIdentifiers: UInt256
-    // the contract address where the FloidProtocol deployed
-    access(contract) let contractAddress: Address
-
-    /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
-       *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
-        *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
-         ***********************************************************/
 
     // floid generic data type
     pub enum GenericStoreType: UInt8 {
@@ -71,23 +55,26 @@ pub contract Floid {
         pub case AddressBinding
     }
 
+    /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
+       *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
+        *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
+         ***********************************************************/
+
     // A public interface to Floid identifier
-    pub resource interface FloidIdentifierPublic {
-        // get sequence of the identifier
-        pub fun getSequence(): UInt256
+    pub resource interface FloidPublic {
         // borrow keyvalue store
         pub fun borrowKVStore(): &KeyValueStore.Store{KeyValueStore.PublicInterface}?
         // borrow address binding store
         pub fun borrowAddressBindingStore(): &AddressBindingStore.Store{AddressBindingStore.PublicInterface}?
 
         // transfer store by key
-        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @FloidIdentifierStore.Store{FloidIdentifierStore.StorePublic}
+        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidInterface.StorePublic}
     }
     
     // A private interface to Floid identifier
-    pub resource interface FloidIdentifierPrivate {
+    pub resource interface FloidPrivate {
         // initialize a new store
-        pub fun initializeStore(store: @FloidIdentifierStore.Store)
+        pub fun initializeStore(store: @{FloidInterface.StorePublic})
         // inherit data from another Floid identifier 
         pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature)
         // generate a transfer key to start a data transfer to another Floid identifier 
@@ -95,11 +82,11 @@ pub contract Floid {
     }
 
     // Resource of the Floid identifier
-    pub resource FloidIdentifier: FloidIdentifierPublic, FloidIdentifierPrivate, MetadataViews.Resolver {
+    pub resource Identifier: FloidInterface.IdentifierPublic, FloidPublic, FloidPrivate, MetadataViews.Resolver {
         // global sequence number
         pub let sequence: UInt256
         // a storage of generic data
-        pub let genericStores: @{GenericStoreType: FloidIdentifierStore.Store}
+        pub let genericStores: @{UInt8: {FloidInterface.StorePublic}}
         // transfer keys
         access(self) let transferKeys: {GenericStoreType: FloidUtils.VerifiableMessages}
 
@@ -108,7 +95,7 @@ pub contract Floid {
             self.genericStores <- {}
             self.transferKeys = {}
 
-            emit FloidIdentifierCreated(sequence: self.sequence)
+            emit FloidCreated(sequence: self.sequence)
 
             Floid.totalIdentifiers = Floid.totalIdentifiers + 1
         }
@@ -156,17 +143,24 @@ pub contract Floid {
             return self.sequence
         }
         
+        // borrow keyvalue store
+        pub fun borrowStore(key: UInt8): &{FloidInterface.StorePublic} {
+            return (&self.genericStores[key] as &{FloidInterface.StorePublic}?)!
+        }
+
+        // borrow keyvalue store
         pub fun borrowKVStore(): &KeyValueStore.Store{KeyValueStore.PublicInterface}? {
             return self.borrowKVStoreFull() as &KeyValueStore.Store{KeyValueStore.PublicInterface}?
         }
-        
+
+        // borrow address binding store
         pub fun borrowAddressBindingStore(): &AddressBindingStore.Store{AddressBindingStore.PublicInterface}? {
             return self.borrowAddressBindingStoreFull() as &AddressBindingStore.Store{AddressBindingStore.PublicInterface}?
         }
 
         // --- Setters - Private Interfaces ---
 
-        pub fun initializeStore(store: @FloidIdentifierStore.Store) {
+        pub fun initializeStore(store: @{FloidInterface.StorePublic}) {
             var storeType: GenericStoreType? = nil 
             if store.isInstance(Type<@KeyValueStore.Store>()) {
                 storeType = GenericStoreType.KVStore
@@ -174,11 +168,11 @@ pub contract Floid {
                 storeType = GenericStoreType.AddressBinding
             }
             assert(storeType != nil, message: "Invalid store type.")
-            assert(self.genericStores[storeType!] == nil, message: "Only 'nil' resource can be initialized")
+            assert(self.genericStores[storeType!.rawValue] == nil, message: "Only 'nil' resource can be initialized")
 
-            self.genericStores[storeType!] <-! store
+            self.genericStores[storeType!.rawValue] <-! store
 
-            emit FloidIdentifierStoreInitialized(
+            emit FloidStoreInitialized(
                 owner: self.owner!.address,
                 storeType: storeType!.rawValue
             )
@@ -187,20 +181,20 @@ pub contract Floid {
         // inherit data from another Floid identifier 
         pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature) {
             pre {
-                self.genericStores[type] == nil: "Only 'nil' resource can be inherited"
+                self.genericStores[type.rawValue] == nil: "Only 'nil' resource can be inherited"
             }
             // first ensure registered
             self.ensureRegistered()
 
             let sender = getAccount(from)
-                .getCapability(Floid.FloidIdentifierPublicPath)
-                .borrow<&FloidIdentifier{FloidIdentifierPublic}>()
+                .getCapability(Floid.FloidPublicPath)
+                .borrow<&Identifier{FloidPublic}>()
                 ?? panic("Failed to borrow identifier of sender address")
 
             let store <- sender.transferStoreByKey(type: type, transferKey: transferKey, sigTag: sigTag, sigData: sigData)
-            self.genericStores[type] <-! store
+            self.genericStores[type.rawValue] <-! store
 
-            emit FloidIdentifierStoreTransfered(
+            emit FloidStoreTransfered(
                 sender: from,
                 storeType: type.rawValue,
                 recipient: self.owner!.address
@@ -209,7 +203,7 @@ pub contract Floid {
 
         // generate a transfer key
         pub fun generateTransferKey(type: GenericStoreType): String {pre {
-                self.genericStores[type] != nil: "The store resource doesn't exist"
+                self.genericStores[type.rawValue] != nil: "The store resource doesn't exist"
             }
             // first ensure registered
             self.ensureRegistered()
@@ -220,7 +214,7 @@ pub contract Floid {
             }
             let keyString = self.transferKeys[type]!.generateNewMessage(expireIn: oneDay)
 
-            emit FloidIdentifierStoreTransferKeyGenerated(
+            emit FloidStoreTransferKeyGenerated(
                 owner: self.owner!.address,
                 storeType: type.rawValue,
                 key: keyString
@@ -232,12 +226,12 @@ pub contract Floid {
 
         // clear a store
         pub fun clearStore(type: GenericStoreType) {
-            let store <- self.genericStores.remove(key: type) ?? panic("Missing data store")
+            let store <- self.genericStores.remove(key: type.rawValue) ?? panic("Missing data store")
             destroy store
         }
 
         pub fun borrowKVStoreFull(): &KeyValueStore.Store? {
-            let store = &self.genericStores[GenericStoreType.KVStore] as auth &FloidIdentifierStore.Store?
+            let store = &self.genericStores[GenericStoreType.KVStore.rawValue] as auth &{FloidInterface.StorePublic}?
             if store != nil && store.isInstance(Type<@KeyValueStore.Store>()) {
                 return store as! &KeyValueStore.Store
             }
@@ -245,7 +239,7 @@ pub contract Floid {
         }
 
         pub fun borrowAddressBindingStoreFull(): &AddressBindingStore.Store? {
-            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &FloidIdentifierStore.Store?
+            let store = &self.genericStores[GenericStoreType.AddressBinding.rawValue] as auth &{FloidInterface.StorePublic}?
             if store != nil && store.isInstance(Type<@AddressBindingStore.Store>()) {
                 return store as! &AddressBindingStore.Store
             }
@@ -255,9 +249,9 @@ pub contract Floid {
         // --- Setters - Contract Only ---
 
         // transfer data to another Floid identifier 
-        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @FloidIdentifierStore.Store{FloidIdentifierStore.StorePublic} {
+        access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidInterface.StorePublic} {
             pre {
-                self.genericStores[type] != nil: "The store resource doesn't exist"
+                self.genericStores[type.rawValue] != nil: "The store resource doesn't exist"
                 self.transferKeys[type] != nil: "cannot find transfer key."
             }
             assert(self.transferKeys[type]!.isMessageValid(message: transferKey), message: "Invalid transferKey: ".concat(transferKey))
@@ -277,7 +271,7 @@ pub contract Floid {
             assert(isValid, message: "Signature of transfer key is invalid.")
 
             // move store
-            let store <- self.genericStores.remove(key: type) ?? panic("Missing data store")
+            let store <- self.genericStores.remove(key: type.rawValue) ?? panic("Missing data store")
 
             // return store
             return <- store
@@ -289,218 +283,60 @@ pub contract Floid {
         access(self) fun ensureRegistered() {
             let owner = self.owner ?? panic("Missing owner, identifier is not in user storage.")
 
-            let protocol = Floid.borrowProtocolPublic()
+            let protocol = FloidProtocol.borrowProtocolPublic()
             if !protocol.isRegistered(user: owner.address) {
                 protocol.registerIdentifier(
-                    user: owner.getCapability<&FloidIdentifier{FloidIdentifierPublic}>(Floid.FloidIdentifierPublicPath)
+                    user: owner.getCapability<&FloidInterface.Identifier{FloidInterface.IdentifierPublic}>(Floid.FloidPublicPath)
                 )
             }
         }
     }
 
-    // enumerations of reverse index
-    pub enum ReverseIndexType: UInt8 {
-        pub case ThirdPartyChain
-        pub case KeyToAddresses
-    }
+    // access(account) fun updateThirdPartyChainReverseIndex(addrID: FloidUtils.AddressID, address: Address, remove: Bool) {
+    //     pre {
+    //         self.registeredAddresses.contains(address): "Address should be registered already."
+    //     }
+    //     let addrIDKey = addrID.toString()
+    //     let currentBindings = self.getReverseBindings(ReverseIndexType.ThirdPartyChain, key: addrIDKey)
+    //     if !remove && currentBindings.length > 0 {
+    //         panic("Only one address can be binding to same AddressID")
+    //     } else if remove && !currentBindings.contains(address) {
+    //         return
+    //     }
 
-    // A public interface to Floid Protocol
-    pub resource interface FloidProtocolPublic {
-        // check if registered to Protocol
-        pub fun isRegistered(user: Address): Bool
-        // borrow users' identifier
-        pub fun borrowIdentifier(sequence: UInt256): &FloidIdentifier{FloidIdentifierPublic}?
-        // get reverse binding addresses
-        pub fun getReverseBindings(_ category: ReverseIndexType, key: String): [Address]
-        // sync KeyToAddress reverse index of any address
-        pub fun syncPublicKeysReverseIndex(address: Address)
+    //     // check binding in the identifier
+    //     let user = Floid.borrowIdentifier(user: address) ?? panic("Failed to borrow floid identifier.")
+    //     let bindingStore = user.borrowAddressBindingStore() ?? panic("Failed to borrow address binding store.")
+    //     let isBinded = bindingStore.isBinded(addrID: addrID)
+    //     assert((!remove && isBinded) || (remove && !isBinded), message: "The Address id binding state is invalid.")
 
-        // register users' identifier
-        access(contract) fun registerIdentifier(user: Capability<&FloidIdentifier{FloidIdentifierPublic}>)
-        // update reverse index
-        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressBindingStore.AddressID, address: Address, remove: Bool)
-    }
-
-    // Resource of the Floid Protocol
-    pub resource FloidProtocol: FloidProtocolPublic {
-        // all registered identifiers
-        access(self) let registeredAddresses: [Address]
-        // all capabilities
-        access(self) let registeredCapabilities: {UInt256: Capability<&FloidIdentifier{FloidIdentifierPublic}>}
-        // reverse indexes
-        access(self) let reverseMapping: {ReverseIndexType: {String: {Address: Bool}}}
-
-        init() {
-            self.registeredAddresses = []
-            self.registeredCapabilities = {}
-            self.reverseMapping = {}
-        }
-
-        // --- Getters - Public Interfaces ---
-
-        pub fun isRegistered(user: Address): Bool {
-            return self.registeredAddresses.contains(user)
-        }
-
-        pub fun borrowIdentifier(sequence: UInt256): &FloidIdentifier{FloidIdentifierPublic}? {
-            if let cap = self.registeredCapabilities[sequence] {
-                return cap.borrow()
-            }
-            return nil
-        }
-
-        pub fun getReverseBindings(_ category: ReverseIndexType, key: String): [Address] {
-            let records = &self.reverseMapping[category] as &{String: {Address: Bool}}?
-            if records == nil {
-                return []
-            }
-            if records![key] == nil {
-                return []
-            }
-            return records![key]!.keys
-        }
-
-        pub fun syncPublicKeysReverseIndex(address: Address) {
-            let removeOrNot: [Bool] = []
-            let availableKeys: [String] = []
-            let accountKeys = getAccount(address).keys
-            var i = 0
-            while true {
-                let currentKey = accountKeys.get(keyIndex: i)
-                if currentKey == nil {
-                    break
-                }
-                availableKeys.append(String.encodeHex(currentKey!.publicKey.publicKey))
-                removeOrNot.append(currentKey!.isRevoked)
-                i = i + 1
-            }
-
-            // update all keys
-            i = 0
-            while i < availableKeys.length {
-                self.updateReverseIndex(
-                    ReverseIndexType.KeyToAddresses,
-                    key: availableKeys[i],
-                    address: address,
-                    remove: removeOrNot[i]
-                )
-                i = i + 1
-            }
-        }
-
-        // --- Setters - Contract Only ---
-
-        access(contract) fun registerIdentifier(user: Capability<&FloidIdentifier{FloidIdentifierPublic}>) {
-            pre {
-                !self.registeredAddresses.contains(user.address): "Address already registered."
-            }
-            let ref = user.borrow() ?? panic("Cannot borrow identifier public reference.")
-            let seq = ref.getSequence()
-
-            self.registeredAddresses.append(user.address)
-            self.registeredCapabilities.insert(key: seq, user)
-
-            emit FloidProtocolIdentifierRegistered(
-                owner: user.address,
-                sequence: seq
-            )
-        }
-
-        access(contract) fun updateThirdPartyChainReverseIndex(addrID: AddressBindingStore.AddressID, address: Address, remove: Bool) {
-            pre {
-                self.registeredAddresses.contains(address): "Address should be registered already."
-            }
-            let addrIDKey = addrID.toString()
-            let currentBindings = self.getReverseBindings(ReverseIndexType.ThirdPartyChain, key: addrIDKey)
-            if !remove && currentBindings.length > 0 {
-                panic("Only one address can be binding to same AddressID")
-            } else if remove && !currentBindings.contains(address) {
-                return
-            }
-
-            // check binding in the identifier
-            let user = Floid.borrowIdentifier(user: address) ?? panic("Failed to borrow floid identifier.")
-            let bindingStore = user.borrowAddressBindingStore() ?? panic("Failed to borrow address binding store.")
-            let isBinded = bindingStore.isBinded(addrID: addrID)
-            assert((!remove && isBinded) || (remove && !isBinded), message: "The Address id binding state is invalid.")
-
-            self.updateReverseIndex(ReverseIndexType.ThirdPartyChain, key: addrIDKey, address: address, remove: remove)
-        }
-
-        // --- Self Only ---
-
-        access(self) fun updateReverseIndex(_ category: ReverseIndexType, key: String, address: Address, remove: Bool) {
-            // ensure record array
-            if self.reverseMapping[category] == nil {
-                self.reverseMapping[category] = {}
-            }
-            let records = (&self.reverseMapping[category] as &{String: {Address: Bool}}?)!
-            if records[key] == nil {
-                records.insert(key: key, {})
-            }
-
-            if remove && records[key]!.containsKey(address) {
-                // to remove address
-                records[key]!.remove(key: address)
-            } else if !remove && !records[key]!.containsKey(address) {
-                // to add address
-                records[key]!.insert(key: address, true)
-            } else {
-                // no update
-                return 
-            }
-
-            emit FloidProtocolReverseIndexUpdated(
-                category: category.rawValue,
-                key: key,
-                address: address,
-                remove: remove
-            )
-        }
-    }
+    //     self.updateReverseIndex(ReverseIndexType.ThirdPartyChain, key: addrIDKey, address: address, remove: remove)
+    // }
 
     // ---- contract methods ----
 
-    // borrow the public interface
-    access(account) fun borrowProtocolPublic(): &FloidProtocol{FloidProtocolPublic} {
-        return getAccount(Floid.contractAddress)
-            .getCapability(Floid.FloidProtocolPublicPath)
-            .borrow<&FloidProtocol{FloidProtocolPublic}>()
-            ?? panic("Failed to borrow protocol public.")
-    }
-
     // create a resource instance of FloidIdentifier
-    pub fun createIdentifier(): @FloidIdentifier {
-        return <- create FloidIdentifier()
+    pub fun createIdentifier(): @Identifier {
+        return <- create Identifier()
     }
 
     // borrow the public identifier by address
-    pub fun borrowIdentifier(user: Address): &FloidIdentifier{FloidIdentifierPublic}? {
+    pub fun borrowIdentifier(user: Address): &Identifier{FloidPublic}? {
         return getAccount(user)
-            .getCapability(self.FloidIdentifierPublicPath)
-            .borrow<&FloidIdentifier{FloidIdentifierPublic}>()
+            .getCapability(self.FloidPublicPath)
+            .borrow<&Identifier{FloidPublic}>()
     }
 
     init() {
         // set state
         self.totalIdentifiers = 0
-        self.contractAddress = self.account.address
 
         // paths
-        self.FloidProtocolStoragePath = /storage/FloidProtocolPath
-        self.FloidProtocolPublicPath = /public/FloidProtocolPath
-
-        self.FloidIdentifierStoragePath = /storage/FloidIdentifierPath
-        self.FloidIdentifierPrivatePath = /private/FloidIdentifierPath
-        self.FloidIdentifierPublicPath = /public/FloidIdentifierPath
-
-        // create resource and link the public capability
-        self.account.save(<- create FloidProtocol(), to: self.FloidProtocolStoragePath)
-        self.account.link<&FloidProtocol{FloidProtocolPublic}>(
-            self.FloidProtocolPublicPath,
-            target: self.FloidProtocolStoragePath
-        )
+        self.FloidStoragePath = /storage/FloidIdentifierPath
+        self.FloidPrivatePath = /private/FloidIdentifierPath
+        self.FloidPublicPath = /public/FloidIdentifierPath
 
         emit ContractInitialized()
     }
 }
+ 

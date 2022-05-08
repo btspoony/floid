@@ -3,10 +3,9 @@
 # The contract of Floid KeyValue store
 
 */
+import FloidInterface from "../FloidInterface.cdc"
 
-import FloidIdentifierStore from "../FloidIdentifierStore.cdc"
-
-pub contract KeyValueStore: FloidIdentifierStore {
+pub contract KeyValueStore {
 
     /**    ____ _  _ ____ _  _ ___ ____
        *   |___ |  | |___ |\ |  |  [__
@@ -29,7 +28,7 @@ pub contract KeyValueStore: FloidIdentifierStore {
     }
 
     // The resource of key value store
-    pub resource Store: FloidIdentifierStore.StorePublic, PublicInterface {
+    pub resource Store: FloidInterface.StorePublic, PublicInterface {
         access(self) let kvStore: {String: AnyStruct}
 
         init() {
