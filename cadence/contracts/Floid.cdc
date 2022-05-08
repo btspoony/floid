@@ -170,6 +170,9 @@ pub contract Floid: FloidInterface {
             assert(storeType != nil, message: "Invalid store type.")
             assert(self.genericStores[storeType!.rawValue] == nil, message: "Only 'nil' resource can be initialized")
 
+            // first ensure registered
+            self.ensureRegistered()
+
             self.genericStores[storeType!.rawValue] <-! store
 
             emit FloidStoreInitialized(
@@ -286,7 +289,7 @@ pub contract Floid: FloidInterface {
             let protocol = FloidProtocol.borrowProtocolPublic()
             if !protocol.isRegistered(user: owner.address) {
                 protocol.registerIdentifier(
-                    user: owner.getCapability<&FloidInterface.Identifier{FloidInterface.IdentifierPublic}>(Floid.FloidPublicPath)
+                    user: owner.getCapability<&{FloidInterface.IdentifierPublic}>(Floid.FloidPublicPath)
                 )
             }
         }

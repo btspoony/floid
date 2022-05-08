@@ -62,7 +62,7 @@ pub contract FloidProtocol {
 
         // ---- contract methods ----
         // register users' identifier
-        access(account) fun registerIdentifier(user: Capability<&FloidInterface.Identifier{FloidInterface.IdentifierPublic}>)
+        access(account) fun registerIdentifier(user: Capability<&{FloidInterface.IdentifierPublic}>)
     }
 
     // Resource of the Floid Protocol
@@ -70,7 +70,7 @@ pub contract FloidProtocol {
         // all registered identifiers
         access(self) let registeredAddresses: [Address]
         // all capabilities
-        access(self) let registeredCapabilities: {UInt256: Capability<&FloidInterface.Identifier{FloidInterface.IdentifierPublic}>}
+        access(self) let registeredCapabilities: {UInt256: Capability<&{FloidInterface.IdentifierPublic}>}
         // reverse indexes
         access(self) let reverseMapping: {ReverseIndexType: {String: {Address: Bool}}}
 
@@ -127,7 +127,7 @@ pub contract FloidProtocol {
 
         // --- Setters - Contract Only ---
 
-        access(account) fun registerIdentifier(user: Capability<&FloidInterface.Identifier{FloidInterface.IdentifierPublic}>) {
+        access(account) fun registerIdentifier(user: Capability<&{FloidInterface.IdentifierPublic}>) {
             pre {
                 !self.registeredAddresses.contains(user.address): "Address already registered."
             }
@@ -203,3 +203,4 @@ pub contract FloidProtocol {
         emit ContractInitialized()
     }
 }
+ 
