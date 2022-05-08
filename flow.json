@@ -44,6 +44,9 @@
       }
     },
     "FloidUtils": "./cadence/contracts/FloidUtils.cdc",
+    "FloidIdentifierStore": "./cadence/contracts/FloidIdentifierStore.cdc",
+    "KeyValueStore": "./cadence/contracts/floid-stores/KeyValueStore.cdc",
+    "AddressBindingStore": "./cadence/contracts/floid-stores/AddressBindingStore.cdc",
     "Floid": "./cadence/contracts/Floid.cdc"
 	},
 	"deployments": {
@@ -52,6 +55,9 @@
         "NonFungibleToken",
         "MetadataViews",
         "FloidUtils",
+        "FloidIdentifierStore",
+        "KeyValueStore",
+        "AddressBindingStore",
         "Floid"
       ]
     }

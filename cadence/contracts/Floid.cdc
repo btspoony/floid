@@ -87,7 +87,7 @@ pub contract Floid {
     // A private interface to Floid identifier
     pub resource interface FloidIdentifierPrivate {
         // initialize a new store
-        pub fun initializeStore(type: GenericStoreType)
+        pub fun initializeStore(store: @FloidIdentifierStore.Store)
         // inherit data from another Floid identifier 
         pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature)
         // generate a transfer key to start a data transfer to another Floid identifier 
@@ -99,7 +99,7 @@ pub contract Floid {
         // global sequence number
         pub let sequence: UInt256
         // a storage of generic data
-        pub let genericStores: @{GenericStoreType: FloidIdentifierStore.Store{FloidIdentifierStore.StorePublic}}
+        pub let genericStores: @{GenericStoreType: FloidIdentifierStore.Store}
         // transfer keys
         access(self) let transferKeys: {GenericStoreType: FloidUtils.VerifiableMessages}
 
@@ -166,22 +166,21 @@ pub contract Floid {
 
         // --- Setters - Private Interfaces ---
 
-        pub fun initializeStore(type: GenericStoreType) {
-            // pre {
-            //     self.genericStores[type] == nil: "Only 'nil' resource can be initialized"
-            // }
-            // switch type {
-            // case GenericStoreType.KVStore:
-            //     self.genericStores[GenericStoreType.KVStore] <-! KeyValueStore.createStore()
-            //     break
-            // case GenericStoreType.AddressBinding:
-            //     self.genericStores[GenericStoreType.AddressBinding] <-! create AddressBindingStore()
-            //     break
-            // }
+        pub fun initializeStore(store: @FloidIdentifierStore.Store) {
+            var storeType: GenericStoreType? = nil 
+            if store.isInstance(Type<@KeyValueStore.Store>()) {
+                storeType = GenericStoreType.KVStore
+            } else if store.isInstance(Type<@AddressBindingStore.Store>()) {
+                storeType = GenericStoreType.AddressBinding
+            }
+            assert(storeType != nil, message: "Invalid store type.")
+            assert(self.genericStores[storeType!] == nil, message: "Only 'nil' resource can be initialized")
+
+            self.genericStores[storeType!] <-! store
 
             emit FloidIdentifierStoreInitialized(
                 owner: self.owner!.address,
-                storeType: type.rawValue
+                storeType: storeType!.rawValue
             )
         }
 
@@ -238,16 +237,16 @@ pub contract Floid {
         }
 
         pub fun borrowKVStoreFull(): &KeyValueStore.Store? {
-            let store = &self.genericStores[GenericStoreType.KVStore] as auth &{FloidIdentifierStore.StorePublic}?
-            if store.isInstance(Type<@KeyValueStore.Store>()) {
+            let store = &self.genericStores[GenericStoreType.KVStore] as auth &FloidIdentifierStore.Store?
+            if store != nil && store.isInstance(Type<@KeyValueStore.Store>()) {
                 return store as! &KeyValueStore.Store
             }
             return nil
         }
 
         pub fun borrowAddressBindingStoreFull(): &AddressBindingStore.Store? {
-            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore.StorePublic}?
-            if store.isInstance(Type<@AddressBindingStore.Store>()) {
+            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &FloidIdentifierStore.Store?
+            if store != nil && store.isInstance(Type<@AddressBindingStore.Store>()) {
                 return store as! &AddressBindingStore.Store
             }
             return nil
