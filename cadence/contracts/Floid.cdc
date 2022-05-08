@@ -6,15 +6,17 @@
 
 ## `FloidProtocol` resource
 
-todo
+A public 
 
 ## `FloidIdentifier` resource
 
 todo
 
 */
+
 import Crypto
 import MetadataViews from "./core/MetadataViews.cdc"
+import FloidUtils from "./FloidUtils.cdc"
 
 pub contract Floid {
 
@@ -126,110 +128,6 @@ pub contract Floid {
         return AddressID(chain!, address: str.slice(from: parseIdx[1], upTo: str.length), referID: str.slice(from: parseIdx[0], upTo: parseIdx[1]))
     }
 
-    // --- expirable key and crypto verify ---
-
-    pub struct ExpirableMessage {
-        pub let msg: String
-        pub let expireAt: UFix64
-
-        init(_ msg: String, expire: UFix64) {
-            self.msg = msg
-            self.expireAt = expire
-        }
-    }
-
-    // The struct of verifiable messages
-    pub struct VerifiableMessages {
-        access(self) let messages: [ExpirableMessage]
-        access(self) let maxLengh: Int
-
-        init(_ maxLengh: Int?) {
-            self.messages = []
-            self.maxLengh = maxLengh ?? 5
-        }
-
-        // check if the message is valid
-        pub fun isMessageValid(message: String): Bool {
-            let now = getCurrentBlock().timestamp
-            var isValid = false
-
-            for one in self.messages {
-                if message == one.msg && now <= one.expireAt {
-                    isValid = true
-                    break
-                }
-            }
-            return isValid
-        }
-
-        // generate a new message with expire time
-        access(contract) fun generateNewMessage(expireIn: UFix64): String {
-            post {
-                self.messages.length <= self.maxLengh: "Too many messages"
-            }
-
-            let block = getCurrentBlock()
-            let blockId = block.id
-            let blockTime = block.timestamp
-
-            let idArr: [UInt8] = []
-            var i = 0
-            while i < 16 {
-                idArr.append(blockId[Int(unsafeRandom() % 32)]!)
-                i = i + 1
-            }
-
-            let keyString = String.encodeHex(idArr)
-            let key = ExpirableMessage(keyString, expire: blockTime + expireIn)
-
-            self.messages.insert(at: 0, key)
-            // no more than 5 keys
-            if self.messages.length > self.maxLengh {
-                self.messages.removeLast()
-            }
-
-            return keyString
-        }
-
-        // verify a message and remove messages which expired
-        // if not invalid, do nothing
-        access(contract) fun verifyMessageSignatureAndCleanup(
-            message: String,
-            messagePrefix: String?,
-            hashTag: String?,
-            hashAlgorithm: HashAlgorithm,
-            publicKey: [UInt8],
-            signatureAlgorithm: SignatureAlgorithm,
-            signature: [UInt8],
-        ): Bool {
-            // verify signature
-            let messageToVerify = (messagePrefix ?? "").concat(message)
-            let keyToVerify = PublicKey(publicKey: publicKey, signatureAlgorithm: signatureAlgorithm)
-            let isValid = keyToVerify.verify(
-                signature: signature,
-                signedData: messageToVerify.decodeHex(),
-                domainSeparationTag: hashTag ?? "",
-                hashAlgorithm: hashAlgorithm
-            )
-            if !isValid {
-                return false
-            }
-
-            // if valid, remove key data
-            let now = getCurrentBlock().timestamp
-            let expiredIds: [Int] = []
-            for idx, one in self.messages {
-                if message == one.msg || now > one.expireAt {
-                    expiredIds.append(idx)
-                }
-            }
-            for idx in expiredIds {
-                self.messages.remove(at: idx)
-            }
-            return true
-        }
-    }
-
     // floid generic data type
     pub enum GenericStoreType: UInt8 {
         pub case AddressBinding
@@ -257,11 +155,11 @@ pub contract Floid {
         // mapping of the binding AddressID {chainID: {addressID: AddressID}}
         access(self) let bindingMap: {String: {String: AddressID}}
         // all pending messages
-        access(self) let pendingMessages: VerifiableMessages
+        access(self) let pendingMessages: FloidUtils.VerifiableMessages
 
         init() {
             self.bindingMap = {}
-            self.pendingMessages = VerifiableMessages(25)
+            self.pendingMessages = FloidUtils.VerifiableMessages(25)
         }
 
         // --- Getters - Public Interfaces ---
@@ -277,7 +175,11 @@ pub contract Floid {
             return false
         }
 
-        // --- Setters - Private Interfaces ---
+        // --- Setters - Resource Interfaces ---
+
+        // pub fun generateBindingMessage(): String {
+
+        // }
 
         // --- Setters - Contract Only ---
 
@@ -343,7 +245,7 @@ pub contract Floid {
             }
         }
 
-        // --- Setters - Private Interfaces ---
+        // --- Setters - Resource Interfaces ---
 
         // set any value to the kv store
         pub fun setValue(_ key: String, value: AnyStruct) {
@@ -386,7 +288,7 @@ pub contract Floid {
         // a storage of generic data
         pub let genericStores: @{GenericStoreType: {FloidIdentifierStore}}
         // transfer keys
-        access(self) let transferKeys: {GenericStoreType: VerifiableMessages}
+        access(self) let transferKeys: {GenericStoreType: FloidUtils.VerifiableMessages}
 
         init() {
             self.sequence = Floid.totalIdentifiers
@@ -502,7 +404,7 @@ pub contract Floid {
             
             let oneDay: UFix64 = 1000.0 * 60.0 * 60.0 * 24.0
             if self.transferKeys[type] == nil {
-                self.transferKeys[type] = VerifiableMessages(5)
+                self.transferKeys[type] = FloidUtils.VerifiableMessages(5)
             }
             let keyString = self.transferKeys[type]!.generateNewMessage(expireIn: oneDay)
 
@@ -520,6 +422,22 @@ pub contract Floid {
         pub fun clearStore(type: GenericStoreType) {
             let store <- self.genericStores.remove(key: type) ?? panic("Missing data store")
             destroy store
+        }
+
+        pub fun borrowKVStoreFull(): &KeyValueStore? {
+            let store = &self.genericStores[GenericStoreType.KVStore] as auth &{FloidIdentifierStore}?
+            if store.isInstance(Type<@KeyValueStore>()) {
+                return store as! &KeyValueStore
+            }
+            return nil
+        }
+
+        pub fun borrowAddressBindingStoreFull(): &AddressBindingStore? {
+            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore}?
+            if store.isInstance(Type<@AddressBindingStore>()) {
+                return store as! &AddressBindingStore
+            }
+            return nil
         }
 
         // --- Setters - Contract Only ---
@@ -565,22 +483,6 @@ pub contract Floid {
                     user: owner.getCapability<&FloidIdentifier{FloidIdentifierPublic}>(Floid.FloidIdentifierPublicPath)
                 )
             }
-        }
-
-        access(self) fun borrowKVStoreFull(): &KeyValueStore? {
-            let store = &self.genericStores[GenericStoreType.KVStore] as auth &{FloidIdentifierStore}?
-            if store.isInstance(Type<@KeyValueStore>()) {
-                return store as! &KeyValueStore
-            }
-            return nil
-        }
-
-        access(self) fun borrowAddressBindingStoreFull(): &AddressBindingStore? {
-            let store = &self.genericStores[GenericStoreType.AddressBinding] as auth &{FloidIdentifierStore}?
-            if store.isInstance(Type<@AddressBindingStore>()) {
-                return store as! &AddressBindingStore
-            }
-            return nil
         }
     }
 
