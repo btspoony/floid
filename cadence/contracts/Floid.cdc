@@ -147,6 +147,20 @@ pub contract Floid {
             self.maxLengh = maxLengh ?? 5
         }
 
+        // check if the message is valid
+        pub fun isMessageValid(message: String): Bool {
+            let now = getCurrentBlock().timestamp
+            var isValid = false
+
+            for one in self.messages {
+                if message == one.msg && now <= one.expireAt {
+                    isValid = true
+                    break
+                }
+            }
+            return isValid
+        }
+
         // generate a new message with expire time
         access(contract) fun generateNewMessage(expireIn: UFix64): String {
             post {
@@ -174,20 +188,6 @@ pub contract Floid {
             }
 
             return keyString
-        }
-
-        // check if the message is valid
-        access(contract) fun isMessageValid(message: String): Bool {
-            let now = getCurrentBlock().timestamp
-            var isValid = false
-
-            for one in self.messages {
-                if message == one.msg && now <= one.expireAt {
-                    isValid = true
-                    break
-                }
-            }
-            return isValid
         }
 
         // verify a message and remove messages which expired
@@ -255,9 +255,12 @@ pub contract Floid {
     pub resource AddressBindingStore: FloidIdentifierStore, AddressBindingStorePublic {
         // mapping of the binding AddressID {chainID: {addressID: AddressID}}
         access(self) let bindingMap: {String: {String: AddressID}}
+        // all pending messages
+        access(self) let pendingMessages: VerifiableMessages
 
         init() {
             self.bindingMap = {}
+            self.pendingMessages = VerifiableMessages(25)
         }
 
         // --- Getters - Public Interfaces ---
