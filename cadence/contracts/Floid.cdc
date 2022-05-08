@@ -125,6 +125,110 @@ pub contract Floid {
         return AddressID(chain!, address: str.slice(from: parseIdx[1], upTo: str.length), referID: str.slice(from: parseIdx[0], upTo: parseIdx[1]))
     }
 
+    // --- expirable key and crypto verify ---
+
+    pub struct ExpirableMessage {
+        pub let msg: String
+        pub let expireAt: UFix64
+
+        init(_ msg: String, expire: UFix64) {
+            self.msg = msg
+            self.expireAt = expire
+        }
+    }
+
+    // The struct of verifiable messages
+    pub struct VerifiableMessages {
+        access(self) let messages: [ExpirableMessage]
+        access(self) let maxLengh: Int
+
+        init(_ maxLengh: Int?) {
+            self.messages = []
+            self.maxLengh = maxLengh ?? 5
+        }
+
+        // generate a new message with expire time
+        access(contract) fun generateNewMessage(expireIn: UFix64): String {
+            post {
+                self.messages.length <= self.maxLengh: "Too many messages"
+            }
+
+            let block = getCurrentBlock()
+            let blockId = block.id
+            let blockTime = block.timestamp
+
+            let idArr: [UInt8] = []
+            var i = 0
+            while i < 16 {
+                idArr.append(blockId[Int(unsafeRandom() % 32)]!)
+                i = i + 1
+            }
+
+            let keyString = String.encodeHex(idArr)
+            let key = ExpirableMessage(keyString, expire: blockTime + expireIn)
+
+            self.messages.insert(at: 0, key)
+            // no more than 5 keys
+            if self.messages.length > self.maxLengh {
+                self.messages.removeLast()
+            }
+
+            return keyString
+        }
+
+        // check if the message is valid
+        access(contract) fun isMessageValid(message: String): Bool {
+            let now = getCurrentBlock().timestamp
+            var isValid = false
+
+            for one in self.messages {
+                if message == one.msg && now <= one.expireAt {
+                    isValid = true
+                    break
+                }
+            }
+            return isValid
+        }
+
+        // verify a message and remove messages which expired
+        // if not invalid, do nothing
+        access(contract) fun verifyMessageSignatureAndCleanup(
+            message: String,
+            messagePrefix: String?,
+            hashTag: String?,
+            hashAlgorithm: HashAlgorithm,
+            publicKey: [UInt8],
+            signatureAlgorithm: SignatureAlgorithm,
+            signature: [UInt8],
+        ): Bool {
+            // verify signature
+            let messageToVerify = (messagePrefix ?? "").concat(message)
+            let keyToVerify = PublicKey(publicKey: publicKey, signatureAlgorithm: signatureAlgorithm)
+            let isValid = keyToVerify.verify(
+                signature: signature,
+                signedData: messageToVerify.decodeHex(),
+                domainSeparationTag: hashTag ?? "",
+                hashAlgorithm: hashAlgorithm
+            )
+            if !isValid {
+                return false
+            }
+
+            // if valid, remove key data
+            let now = getCurrentBlock().timestamp
+            let expiredIds: [Int] = []
+            for idx, one in self.messages {
+                if message == one.msg || now > one.expireAt {
+                    expiredIds.append(idx)
+                }
+            }
+            for idx in expiredIds {
+                self.messages.remove(at: idx)
+            }
+            return true
+        }
+    }
+
     // floid generic data type
     pub enum GenericStoreType: UInt8 {
         pub case AddressBinding
@@ -248,17 +352,6 @@ pub contract Floid {
 
     }
 
-    // helper struct
-    pub struct TransferKey {
-        pub let key: String
-        pub let expireAt: UFix64
-
-        init(_ key: String, expire: UFix64) {
-            self.key = key
-            self.expireAt = expire
-        }
-    }
-
     // A public interface to Floid identifier
     pub resource interface FloidIdentifierPublic {
         // get sequence of the identifier
@@ -287,7 +380,7 @@ pub contract Floid {
         // a storage of generic data
         pub let genericData: @{GenericStoreType: {FloidIdentifierStore}}
         // transfer keys
-        access(self) let transferKeys: {GenericStoreType: [TransferKey]}
+        access(self) let transferKeys: {GenericStoreType: VerifiableMessages}
 
         init() {
             self.sequence = Floid.totalIdentifiers
@@ -376,40 +469,17 @@ pub contract Floid {
         }
 
         // generate a transfer key
-        pub fun generateTransferKey(type: GenericStoreType): String {
-            pre {
+        pub fun generateTransferKey(type: GenericStoreType): String {pre {
                 self.genericData[type] != nil: "The store resource doesn't exist"
-            }
-            post {
-                self.transferKeys[type]!.length <= 5: "Too many transfer keys"
             }
             // first ensure registered
             self.ensureRegistered()
-
-            let block = getCurrentBlock()
-            let blockId = block.id
-            let blockTime = block.timestamp
-
-            let idArr: [UInt8] = []
-            var i = 0
-            while i < 16 {
-                idArr.append(blockId[Int(unsafeRandom() % 32)]!)
-                i = i + 1
-            }
-
+            
             let oneDay: UFix64 = 1000.0 * 60.0 * 60.0 * 24.0
-            let keyString = String.encodeHex(idArr)
-            let key = TransferKey(keyString, expire: blockTime + oneDay)
-
-            if let arr = self.transferKeys[type] {
-                arr.insert(at: 0, key)
-                // no more than 5 keys
-                if arr.length > 5 {
-                    arr.removeLast()
-                }
-            } else {
-                self.transferKeys[type] = [key]
+            if self.transferKeys[type] == nil {
+                self.transferKeys[type] = VerifiableMessages(5)
             }
+            let keyString = self.transferKeys[type]!.generateNewMessage(expireIn: oneDay)
 
             emit FloidIdentifierStoreTransferKeyGenerated(
                 owner: self.owner!.address,
@@ -433,58 +503,32 @@ pub contract Floid {
         access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidIdentifierStore} {
             pre {
                 self.genericData[type] != nil: "The store resource doesn't exist"
+                self.transferKeys[type] != nil: "cannot find transfer key."
             }
-            assert(self.verifyTransferKey(type: type, transferKey: transferKey), message: "Invalid transferKey: ".concat(transferKey))
+            assert(self.transferKeys[type]!.isMessageValid(message: transferKey), message: "Invalid transferKey: ".concat(transferKey))
 
-            // verify signature
+            // get key from account
             let keyToVerify = self.owner!.keys.get(keyIndex: sigData.keyIndex) ?? panic("Failed to get account public key")
-            let isValid = keyToVerify.publicKey.verify(
+            // verify signature
+            let isValid = self.transferKeys[type]!.verifyMessageSignatureAndCleanup(
+                message: transferKey,
+                messagePrefix: nil,
+                hashTag: sigTag,
+                hashAlgorithm: keyToVerify.hashAlgorithm,
+                publicKey: keyToVerify.publicKey.publicKey,
+                signatureAlgorithm: keyToVerify.publicKey.signatureAlgorithm,
                 signature: sigData.signature,
-                signedData: transferKey.decodeHex(), // transfer key is the message
-                domainSeparationTag: sigTag,
-                hashAlgorithm: keyToVerify.hashAlgorithm
             )
             assert(isValid, message: "Signature of transfer key is invalid.")
 
             // move store
             let store <- self.genericData.remove(key: type) ?? panic("Missing data store")
 
-            // remove key data
-            let now = getCurrentBlock().timestamp
-            let expiredIds: [Int] = []
-            let keys = self.transferKeys[type]!
-            for idx, one in keys {
-                if transferKey == one.key || now > one.expireAt {
-                    expiredIds.append(idx)
-                }
-            }
-            for idx in expiredIds {
-                self.transferKeys[type]!.remove(at: idx)
-            }
-
             // return store
             return <- store
         }
 
         // --- Self Only ---
-
-        // verify transferKey
-        access(self) fun verifyTransferKey(type: GenericStoreType, transferKey: String): Bool {
-            pre {
-                self.transferKeys[type] != nil: "cannot find transfer key."
-            }
-            let now = getCurrentBlock().timestamp
-            var isValid = false
-
-            let keys = self.transferKeys[type]!
-            for one in keys {
-                if transferKey == one.key && now <= one.expireAt {
-                    isValid = true
-                    break
-                }
-            }
-            return isValid
-        }
 
         // ensure the identifier is registered to protocol
         access(self) fun ensureRegistered() {
