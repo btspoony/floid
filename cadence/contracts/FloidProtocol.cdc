@@ -70,7 +70,6 @@ pub contract FloidProtocol {
             address: Address,
             remove: Bool,
             ensureRegistered: Bool,
-            requiredStore: UInt8?,
         )
     }
 
@@ -127,7 +126,6 @@ pub contract FloidProtocol {
                     address: address,
                     remove: removeOrNot[i],
                     ensureRegistered: false,
-                    requiredStore: nil
                 )
                 i = i + 1
             }
@@ -157,16 +155,12 @@ pub contract FloidProtocol {
             address: Address,
             remove: Bool,
             ensureRegistered: Bool,
-            requiredStore: UInt8?,
         ) {
             // ensure registered
             if ensureRegistered {
                 let cap = self.registered[address] ?? panic("Address is not registered")
                 assert(cap.address == address, message: "address should be same")
-                let user = cap.borrow() ?? panic("Failed to borrow identifier.")
-                if let storeId = requiredStore {
-                    user.borrowStore(key: storeId)
-                }
+                cap.borrow() ?? panic("Failed to borrow identifier.")
             }
 
             // ensure record array

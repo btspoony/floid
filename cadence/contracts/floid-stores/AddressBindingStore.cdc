@@ -100,7 +100,8 @@ pub contract AddressBindingStore {
 
             self.bindingMap[chainID]!.insert(key: addressKey, addrID)
 
-            // TODO binding to Protocol
+            // binding to Protocol
+            self.updateProtocolReverseIndex(addrID: addrID)
 
             emit FloidABStoreAddressIDBinded(
                 owner: self.getOwner(),
@@ -145,28 +146,37 @@ pub contract AddressBindingStore {
             let hash: [UInt8] = HashAlgorithm.KECCAK_256.hash(keyArr)
             return "0x".concat(String.encodeHex(hash.slice(from: hash.length - 20, upTo: hash.length - 1)))
         }
+
+        // update protocol reverse index
+        access(self) fun updateProtocolReverseIndex(addrID: FloidUtils.AddressID) {
+            // global protocol
+            let protocol = FloidProtocol.borrowProtocolPublic()
+
+            let addrIDKey = addrID.toString()
+            let currentBindings = protocol.getReverseBindings(FloidProtocol.ReverseIndexType.ThirdPartyChain, key: addrIDKey)
+            // remove the exists one
+            if currentBindings.length > 0 {
+                for address in currentBindings {
+                    protocol.updateReverseIndex(
+                        FloidProtocol.ReverseIndexType.ThirdPartyChain,
+                        key: addrIDKey,
+                        address: address,
+                        remove: true, 
+                        ensureRegistered: false
+                    )
+                }
+            }
+
+            // binding current address
+            protocol.updateReverseIndex(
+                FloidProtocol.ReverseIndexType.ThirdPartyChain,
+                key: addrIDKey,
+                address: self.getOwner(),
+                remove: false, 
+                ensureRegistered: true
+            )
+        }
     }
-
-    // access(account) fun updateThirdPartyChainReverseIndex(addrID: FloidUtils.AddressID, address: Address, remove: Bool) {
-    //     pre {
-    //         self.registeredAddresses.contains(address): "Address should be registered already."
-    //     }
-    //     let addrIDKey = addrID.toString()
-    //     let currentBindings = self.getReverseBindings(ReverseIndexType.ThirdPartyChain, key: addrIDKey)
-    //     if !remove && currentBindings.length > 0 {
-    //         panic("Only one address can be binding to same AddressID")
-    //     } else if remove && !currentBindings.contains(address) {
-    //         return
-    //     }
-
-    //     // check binding in the identifier
-    //     let user = Floid.borrowIdentifier(user: address) ?? panic("Failed to borrow floid identifier.")
-    //     let bindingStore = user.borrowAddressBindingStore() ?? panic("Failed to borrow address binding store.")
-    //     let isBinded = bindingStore.isBinded(addrID: addrID)
-    //     assert((!remove && isBinded) || (remove && !isBinded), message: "The Address id binding state is invalid.")
-
-    //     self.updateReverseIndex(ReverseIndexType.ThirdPartyChain, key: addrIDKey, address: address, remove: remove)
-    // }
 
     // create a resource of the store
     pub fun createStore(): @Store {
