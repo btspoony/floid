@@ -83,6 +83,8 @@ pub contract Floid: FloidInterface {
 
     // Resource of the Floid identifier
     pub resource Identifier: FloidInterface.IdentifierPublic, FloidPublic, FloidPrivate, MetadataViews.Resolver {
+        // initialize account, should be same as owner address
+        access(self) let initAddress: Address
         // global sequence number
         pub let sequence: UInt256
         // a storage of generic data
@@ -90,7 +92,8 @@ pub contract Floid: FloidInterface {
         // transfer keys
         access(self) let transferKeys: {GenericStoreType: FloidUtils.VerifiableMessages}
 
-        init() {
+        init(_ account: Address) {
+            self.initAddress = account
             self.sequence = Floid.totalIdentifiers
             self.genericStores <- {}
             self.transferKeys = {}
@@ -286,6 +289,7 @@ pub contract Floid: FloidInterface {
         // ensure the identifier is registered to protocol
         access(self) fun ensureRegistered() {
             let owner = self.owner ?? panic("Missing owner, identifier is not in user storage.")
+            assert(owner.address == self.initAddress, message: "Owner should be never changed.")
 
             let protocol = FloidProtocol.borrowProtocolPublic()
             if !protocol.isRegistered(user: owner.address) {
@@ -299,8 +303,8 @@ pub contract Floid: FloidInterface {
     // ---- contract methods ----
 
     // create a resource instance of FloidIdentifier
-    pub fun createIdentifier(): @Identifier {
-        return <- create Identifier()
+    pub fun createIdentifier(acct: Address): @Identifier {
+        return <- create Identifier(acct)
     }
 
     // borrow the public identifier by address

@@ -27,6 +27,8 @@ pub contract AddressBindingStore {
     pub resource interface PublicInterface {
         // check if address id is binded 
         pub fun isBinded(addrID: FloidUtils.AddressID): Bool
+        // get the last Message
+        pub fun getLastMessage(): FloidUtils.ExpirableMessage?
     }
 
     // third party address binding store
@@ -52,6 +54,10 @@ pub contract AddressBindingStore {
                 return addresses.containsKey(addrID.toString())
             }
             return false
+        }
+
+        pub fun getLastMessage(): FloidUtils.ExpirableMessage? {
+            return self.pendingMessages.getLastMessage()
         }
 
         // --- Setters - Resource Interfaces ---

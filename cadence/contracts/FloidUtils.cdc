@@ -20,12 +20,20 @@ pub contract FloidUtils {
 
     // The struct of verifiable messages
     pub struct VerifiableMessages {
+        pub let maxLengh: Int
         access(self) let messages: [ExpirableMessage]
-        access(self) let maxLengh: Int
 
         init(_ maxLengh: Int?) {
             self.messages = []
             self.maxLengh = maxLengh ?? 5
+        }
+
+        // get the last verification message
+        pub fun getLastMessage(): ExpirableMessage? {
+            if self.messages.length > 0 {
+                return self.messages[0]
+            }
+            return nil
         }
 
         // check if the message is valid
