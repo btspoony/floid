@@ -216,7 +216,7 @@ pub contract Floid: FloidInterface {
                 self.transferKeys[type] = FloidUtils.VerifiableMessages(5)
             }
             let prefix = "Transfer store from <0x".concat(self.owner!.address.toString()).concat("> - Code: ")
-            let keyString = self.transferKeys[type]!.generateNewMessage(expireIn: oneDay, prefix: nil)
+            let keyString = self.transferKeys[type]!.generateNewMessage(expireIn: oneDay, prefix: prefix)
 
             emit FloidStoreTransferKeyGenerated(
                 owner: self.owner!.address,
