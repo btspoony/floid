@@ -37,7 +37,7 @@ pub contract Floid: FloidInterface {
 
     pub event ContractInitialized()
 
-    pub event FloidCreated(sequence: UInt256)
+    pub event FloidCreated()
     pub event FloidStoreInitialized(owner: Address, storeType: UInt8)
     pub event FloidStoreTransferKeyGenerated(owner: Address, storeType: UInt8, key: String)
     pub event FloidStoreTransfered(sender: Address, storeType: UInt8, recipient: Address)
@@ -46,9 +46,6 @@ pub contract Floid: FloidInterface {
        *   [__   |  |__|  |  |___
         *  ___]  |  |  |  |  |___
          ************************/
-
-    // total identifier created
-    pub var totalIdentifiers: UInt256
 
     // floid generic data type
     pub enum GenericStoreType: UInt8 {
@@ -89,8 +86,6 @@ pub contract Floid: FloidInterface {
     pub resource Identifier: FloidInterface.IdentifierPublic, FloidPublic, FloidPrivate, MetadataViews.Resolver {
         // initialize account, should be same as owner address
         access(self) let initAddress: Address
-        // global sequence number
-        pub let sequence: UInt256
         // a storage of generic data
         pub let genericStores: @{UInt8: {FloidInterface.StorePublic}}
         // transfer keys
@@ -98,13 +93,10 @@ pub contract Floid: FloidInterface {
 
         init(_ account: Address) {
             self.initAddress = account
-            self.sequence = Floid.totalIdentifiers
             self.genericStores <- {}
             self.transferKeys = {}
 
-            emit FloidCreated(sequence: self.sequence)
-
-            Floid.totalIdentifiers = Floid.totalIdentifiers + 1
+            emit FloidCreated()
         }
 
         destroy() {
@@ -146,10 +138,6 @@ pub contract Floid: FloidInterface {
             return nil
         }
 
-        pub fun getSequence(): UInt256 {
-            return self.sequence
-        }
-        
         // borrow keyvalue store
         pub fun borrowStore(key: UInt8): &{FloidInterface.StorePublic} {
             return (&self.genericStores[key] as &{FloidInterface.StorePublic}?)!
@@ -331,9 +319,6 @@ pub contract Floid: FloidInterface {
     }
 
     init() {
-        // set state
-        self.totalIdentifiers = 0
-
         // paths
         self.FloidStoragePath = /storage/FloidIdentifierPath
         self.FloidPrivatePath = /private/FloidIdentifierPath

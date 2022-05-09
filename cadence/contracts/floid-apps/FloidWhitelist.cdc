@@ -13,7 +13,8 @@ pub contract FloidWhitelist {
         *  |    |  |  |  |  | ___]
          *************************/
 
-    // TODO
+    pub let FloidWhitelistsStoragePath: StoragePath
+    pub let FloidWhitelistsPublicPath: PublicPath
 
     /**    ____ _  _ ____ _  _ ___ ____
        *   |___ |  | |___ |\ |  |  [__
@@ -21,18 +22,29 @@ pub contract FloidWhitelist {
          ******************************/
 
     pub event ContractInitialized()
+    pub event FloidWhitelistPoolCreated(owner: Address, id: UInt64)
+
+    /**    ____ ___ ____ ___ ____
+       *   [__   |  |__|  |  |___
+        *  ___]  |  |  |  |  |___
+         ************************/
 
     /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
        *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
         *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
          ***********************************************************/
 
-    // pub resource Airdrop
+    pub resource WhitelistPool {
 
+    }
+
+    pub resource Whitelists {
+
+    }
 
     init() {
-        // self.FloidAirdropPoolStoragePath = /storage/FloidAirdropPoolPath
-        // self.FloidAirdropPoolPublicPath = /public/FloidAirdropPoolPath
+        self.FloidWhitelistsStoragePath = /storage/FloidWhitelistsPath
+        self.FloidWhitelistsPublicPath = /public/FloidWhitelistsPath
 
         emit ContractInitialized()
     }

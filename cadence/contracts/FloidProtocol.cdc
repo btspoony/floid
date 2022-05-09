@@ -29,7 +29,7 @@ pub contract FloidProtocol {
 
     pub event ContractInitialized()
 
-    pub event FloidProtocolIdentifierRegistered(owner: Address, sequence: UInt256)
+    pub event FloidProtocolIdentifierRegistered(owner: Address)
     pub event FloidProtocolReverseIndexUpdated(category: UInt8, key: String, address: Address, remove: Bool)
 
     /**    ____ ___ ____ ___ ____
@@ -138,13 +138,11 @@ pub contract FloidProtocol {
                 !self.isRegistered(user: user.address): "Address already registered."
             }
             let ref = user.borrow() ?? panic("Cannot borrow identifier public reference.")
-            let seq = ref.getSequence()
 
             self.registered.insert(key: user.address, user)
 
             emit FloidProtocolIdentifierRegistered(
-                owner: user.address,
-                sequence: seq
+                owner: user.address
             )
         }
 
