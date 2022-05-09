@@ -25,10 +25,12 @@ pub contract AddressBindingStore {
 
     // A public interface to address binding store
     pub resource interface PublicInterface {
+        // get all binded AddressIDs
+        pub fun getBindedAddressIDs(): [FloidUtils.AddressID]
         // check if address id is binded 
         pub fun isBinded(addrID: FloidUtils.AddressID): Bool
         // get the last Message
-        pub fun getLastMessage(): FloidUtils.ExpirableMessage?
+        pub fun getLastBindingMessage(): FloidUtils.ExpirableMessage?
     }
 
     // third party address binding store
@@ -49,6 +51,19 @@ pub contract AddressBindingStore {
             return self.owner!.address
         }
 
+        // get all binded AddressIDs
+        pub fun getBindedAddressIDs(): [FloidUtils.AddressID] {
+            let ret: [FloidUtils.AddressID] = []
+            for chainId in self.bindingMap.keys {
+                let dic = &self.bindingMap[chainId]! as &{String: FloidUtils.AddressID}
+                for id in dic.keys {
+                    ret.append(dic[id]!)
+                }
+            }
+            return ret
+        }
+
+        // check if address id is binded 
         pub fun isBinded(addrID: FloidUtils.AddressID): Bool {
             if let addresses = self.bindingMap[addrID.getChainID()] {
                 return addresses.containsKey(addrID.toString())
@@ -56,7 +71,8 @@ pub contract AddressBindingStore {
             return false
         }
 
-        pub fun getLastMessage(): FloidUtils.ExpirableMessage? {
+        // get the last Message
+        pub fun getLastBindingMessage(): FloidUtils.ExpirableMessage? {
             return self.pendingMessages.getLastMessage()
         }
 

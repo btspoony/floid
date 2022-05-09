@@ -16,6 +16,7 @@ import FloidUtils from "./FloidUtils.cdc"
 import FloidInterface from "./FloidInterface.cdc"
 import FloidProtocol from "./FloidProtocol.cdc"
 import KeyValueStore from "./floid-stores/KeyValueStore.cdc"
+import SocialIDStore from "./floid-stores/SocialIDStore.cdc"
 import AddressBindingStore from "./floid-stores/AddressBindingStore.cdc"
 
 pub contract Floid: FloidInterface {
@@ -53,6 +54,7 @@ pub contract Floid: FloidInterface {
     pub enum GenericStoreType: UInt8 {
         pub case KVStore
         pub case AddressBinding
+        pub case SocialID
     }
 
     /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
@@ -66,6 +68,8 @@ pub contract Floid: FloidInterface {
         pub fun borrowKVStore(): &KeyValueStore.Store{KeyValueStore.PublicInterface}?
         // borrow address binding store
         pub fun borrowAddressBindingStore(): &AddressBindingStore.Store{AddressBindingStore.PublicInterface}?
+        // borrow emerald id store
+        pub fun borrowSocialIDStore(): &SocialIDStore.Store{SocialIDStore.PublicInterface}?
 
         // transfer store by key
         access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidInterface.StorePublic}
@@ -160,6 +164,15 @@ pub contract Floid: FloidInterface {
         pub fun borrowAddressBindingStore(): &AddressBindingStore.Store{AddressBindingStore.PublicInterface}? {
             return self.borrowAddressBindingStoreFull() as &AddressBindingStore.Store{AddressBindingStore.PublicInterface}?
         }
+        
+        // borrow emerald id store
+        pub fun borrowSocialIDStore(): &SocialIDStore.Store{SocialIDStore.PublicInterface}? {
+            let store = &self.genericStores[GenericStoreType.SocialID.rawValue] as auth &{FloidInterface.StorePublic}?
+            if store != nil && store.isInstance(Type<@SocialIDStore.Store>()) {
+                return store as! &SocialIDStore.Store{SocialIDStore.PublicInterface}
+            }
+            return nil
+        }
 
         // --- Setters - Private Interfaces ---
 
@@ -169,7 +182,10 @@ pub contract Floid: FloidInterface {
                 storeType = GenericStoreType.KVStore
             } else if store.isInstance(Type<@AddressBindingStore.Store>()) {
                 storeType = GenericStoreType.AddressBinding
+            } else if store.isInstance(Type<@SocialIDStore.Store>()) {
+                storeType = GenericStoreType.SocialID
             }
+
             assert(storeType != nil, message: "Invalid store type.")
             assert(self.genericStores[storeType!.rawValue] == nil, message: "Only 'nil' resource can be initialized")
 

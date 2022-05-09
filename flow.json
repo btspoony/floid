@@ -43,11 +43,18 @@
         "testnet": "0x9a0766d93b6608b7"
       }
     },
+    "EmeraldIdentity": {
+      "source": "./cadence/contracts/deps/EmeraldIdentity.cdc",
+      "aliases": {
+        "mainnet": "0x39e42c67cc851cfb"
+      }
+    },
     "FloidUtils": "./cadence/contracts/FloidUtils.cdc",
     "FloidInterface": "./cadence/contracts/FloidInterface.cdc",
     "FloidProtocol": "./cadence/contracts/FloidProtocol.cdc",
     "KeyValueStore": "./cadence/contracts/floid-stores/KeyValueStore.cdc",
     "AddressBindingStore": "./cadence/contracts/floid-stores/AddressBindingStore.cdc",
+    "SocialIDStore": "./cadence/contracts/floid-stores/SocialIDStore.cdc",
     "Floid": "./cadence/contracts/Floid.cdc"
 	},
 	"deployments": {
@@ -60,6 +67,7 @@
         "FloidProtocol",
         "KeyValueStore",
         "AddressBindingStore",
+        "SocialIDStore",
         "Floid"
       ]
     }
