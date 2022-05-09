@@ -46,5 +46,5 @@ pub contract interface FloidInterface {
     }
 
     // create a resource instance of FloidIdentifier
-    pub fun createIdentifier(): @Identifier
+    pub fun createIdentifier(acct: Address): @Identifier
 }

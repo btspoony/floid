@@ -55,20 +55,25 @@
     "KeyValueStore": "./cadence/contracts/floid-stores/KeyValueStore.cdc",
     "AddressBindingStore": "./cadence/contracts/floid-stores/AddressBindingStore.cdc",
     "SocialIDStore": "./cadence/contracts/floid-stores/SocialIDStore.cdc",
-    "Floid": "./cadence/contracts/Floid.cdc"
+    "Floid": "./cadence/contracts/Floid.cdc",
+    "FloidWhitelist": "./cadence/contracts/floid-apps/FloidWhitelist.cdc",
+    "FloidAirdrop": "./cadence/contracts/floid-apps/FloidAirdrop.cdc"
 	},
 	"deployments": {
     "emulator": {
       "emulator-account": [
         "NonFungibleToken",
         "MetadataViews",
+        "EmeraldIdentity",
         "FloidUtils",
         "FloidInterface",
         "FloidProtocol",
         "KeyValueStore",
         "AddressBindingStore",
         "SocialIDStore",
-        "Floid"
+        "Floid",
+        "FloidWhitelist",
+        "FloidAirdrop"
       ]
     }
 	}

@@ -1,23 +1,19 @@
 /**
 
-# The contract of Floid Airdrop App
+# The contract of Floid Whitelist App
 
 */
-import NonFungibleToken from "../core/NonFungibleToken.cdc"
-import FungibleToken from "../core/FungibleToken.cdc"
-import FloidProtocol from "../FloidProtocol.cdc"
-import Floid from "../Floid.cdc"
-import FloidWhitelist from "./FloidWhitelist.cdc"
 
-pub contract FloidAirdrop {
+import FloidProtocol from "../FloidProtocol.cdc"
+
+pub contract FloidWhitelist {
 
     /**    ___  ____ ___ _  _ ____
        *   |__] |__|  |  |__| [__
         *  |    |  |  |  |  | ___]
          *************************/
 
-    pub let FloidAirdropPoolStoragePath: StoragePath
-    pub let FloidAirdropPoolPublicPath: PublicPath
+    // TODO
 
     /**    ____ _  _ ____ _  _ ___ ____
        *   |___ |  | |___ |\ |  |  [__
@@ -25,8 +21,6 @@ pub contract FloidAirdrop {
          ******************************/
 
     pub event ContractInitialized()
-    pub event FloidAirdropNonFungibleTokenClaimed(nftType: Type, nftID: UInt64, recipient: Address)
-    pub event FloidAirdropFungibleTokenClaimed(nftType: Type, amount: UFix64, recipient: Address)
 
     /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
        *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
@@ -37,8 +31,8 @@ pub contract FloidAirdrop {
 
 
     init() {
-        self.FloidAirdropPoolStoragePath = /storage/FloidAirdropPoolPath
-        self.FloidAirdropPoolPublicPath = /public/FloidAirdropPoolPath
+        // self.FloidAirdropPoolStoragePath = /storage/FloidAirdropPoolPath
+        // self.FloidAirdropPoolPublicPath = /public/FloidAirdropPoolPath
 
         emit ContractInitialized()
     }
