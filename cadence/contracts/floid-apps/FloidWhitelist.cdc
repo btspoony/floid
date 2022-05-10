@@ -34,12 +34,41 @@ pub contract FloidWhitelist {
         *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
          ***********************************************************/
 
+    // Resource of the whitelist pool
     pub resource WhitelistPool {
+        init() {
 
+        }
+
+        // --- Getters - Public Interfaces ---
+
+        // --- Getters - Private Interfaces ---
+
+        // --- Setters - Contract Only ---
+
+        // --- Self Only ---
     }
 
+    // Resource of the whitelists
     pub resource Whitelists {
+        init() {
 
+        }
+
+        // --- Getters - Public Interfaces ---
+
+        // --- Getters - Private Interfaces ---
+
+        // --- Setters - Contract Only ---
+
+        // --- Self Only ---
+    }
+
+    // ---- contract methods ----
+
+    // create the whitelists resource
+    pub fun createWhitelists(): @Whitelists {
+        return <- create Whitelists()
     }
 
     init() {
