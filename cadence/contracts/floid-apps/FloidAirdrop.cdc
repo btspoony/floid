@@ -33,14 +33,79 @@ pub contract FloidAirdrop {
         *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
          ***********************************************************/
 
+    // Struct of whitelist
+    pub struct WhitelistInfo {
+        // constants
+        pub let ftQuota: UFix64
+        pub let nftQuota: UInt64
+        // variable
+        pub var claimable: Bool
+        pub var ftClaimedAmount: UFix64
+        pub var nftClaimedIds: [UInt64]
+
+        init(ftQuota: UFix64, nftQuota: UInt64) {
+            self.ftQuota = ftQuota
+            self.nftQuota = nftQuota
+
+            self.claimable = true
+            self.ftClaimedAmount = 0.0
+            self.nftClaimedIds = []
+        }
+
+        // update FT claimed amount
+        access(contract) fun updateFTClaimed(amount: UFix64) {
+            pre {
+                self.ftQuota >= amount + self.ftClaimedAmount: "FT Quota is the maximium claimable amount."
+            }
+            post {
+                self.ftClaimedAmount == before(self.ftClaimedAmount) + amount
+            }
+            self.ftClaimedAmount = self.ftClaimedAmount + amount
+            self.updateClaimable()
+        }
+
+        // update NFT claimed amount
+        access(contract) fun updateNFTClaimed(ids: [UInt64]) {
+            pre {
+                Int(self.nftQuota) >= ids.length + self.nftClaimedIds.length: "NFT Quota is the maximium claimable amount."
+            }
+            post {
+                self.nftClaimedIds.length == before(self.nftClaimedIds.length) + ids.length
+            }
+            for id in ids {
+                if !self.nftClaimedIds.contains(id) {
+                    self.nftClaimedIds.append(id)
+                }
+            }
+            self.updateClaimable()
+        }
+
+        access(self) fun updateClaimable() {
+            if self.ftClaimedAmount == self.ftQuota && self.nftClaimedIds.length == Int(self.nftQuota) {
+                self.claimable = false
+            }
+        }
+    }
+    
     pub resource interface AirdropPoolPublic {
 
     }
 
     // Resource of the airdrop pool
     pub resource AirdropPool: AirdropPoolPublic {
-        init() {
+        access(self) let tokenType: Type
+        access(self) let collection: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
+        // access(self) let claims: {}
+        access(self) let whitelist: {String: WhitelistInfo}
 
+        init(
+            type: Type,
+            collection: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>,
+            whitelist: {String: WhitelistInfo}
+        ) {
+            self.tokenType = type
+            self.collection = collection
+            self.whitelist = whitelist
         }
 
         // --- Getters - Public Interfaces ---
@@ -60,7 +125,8 @@ pub contract FloidAirdrop {
 
     // A private interface of AirdropDashboard
     pub resource interface AirdropDashboardPrivate {
-
+        // borrow private reference
+        pub fun borrowAirdropPoolRef(id: UInt64): &AirdropPool
     }
 
     // Resource of the AirdropDashboard
@@ -78,14 +144,17 @@ pub contract FloidAirdrop {
         // --- Getters - Public Interfaces ---
 
         pub fun borrowAirdropPool(id: UInt64): &AirdropPool{AirdropPoolPublic} {
-            pre {
-                self.airdrops[id] != nil: "Airdrop pool does not exist in the dashboard!"
-            }
-            return (&self.airdrops[id] as &AirdropPool{AirdropPoolPublic}?)!
+            return self.borrowAirdropPoolRef(id: id) as &AirdropPool{AirdropPoolPublic}
         }
 
         // --- Getters - Private Interfaces ---
 
+        pub fun borrowAirdropPoolRef(id: UInt64): &AirdropPool {
+            pre {
+                self.airdrops[id] != nil: "Airdrop pool does not exist in the dashboard!"
+            }
+            return (&self.airdrops[id] as &AirdropPool?)!
+        }
 
 
         // --- Setters - Contract Only ---
