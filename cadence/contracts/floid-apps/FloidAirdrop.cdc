@@ -6,6 +6,7 @@
 import NonFungibleToken from "../core/NonFungibleToken.cdc"
 import FungibleToken from "../core/FungibleToken.cdc"
 import FloidProtocol from "../FloidProtocol.cdc"
+import FloidUtils from "../FloidUtils.cdc"
 import Floid from "../Floid.cdc"
 
 pub contract FloidAirdrop {
@@ -25,90 +26,178 @@ pub contract FloidAirdrop {
 
     pub event ContractInitialized()
     pub event FloidAirdropPoolCreated(owner: Address, id: UInt64)
-    pub event FloidAirdropNonFungibleTokenClaimed(nftType: Type, nftID: UInt64, recipient: Address)
-    pub event FloidAirdropFungibleTokenClaimed(nftType: Type, amount: UFix64, recipient: Address)
+    pub event FloidAirdropNonFungibleTokenClaimed(type: Type, nftID: UInt64, recipient: Address)
+    pub event FloidAirdropFungibleTokenClaimed(type: Type, amount: UFix64, recipient: Address)
 
     /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
        *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
         *  |    |__| | \| |___  |  | |__| | \| |  | |___ |  |    |
          ***********************************************************/
 
-    // Struct of whitelist
-    pub struct WhitelistInfo {
+    // Struct interface of whitelist
+    pub struct interface IWhitelistInfo {
+        // check if claimable
+        pub fun isClaimable(): Bool
+    }
+
+    // Struct of ft whitelist info
+    pub struct FungibleWhitelist: IWhitelistInfo {
         // constants
-        pub let ftQuota: UFix64
-        pub let nftQuota: UInt64
+        pub let quota: UFix64
         // variable
-        pub var claimable: Bool
-        pub var ftClaimedAmount: UFix64
-        pub var nftClaimedIds: [UInt64]
+        pub var claimedAmount: UFix64
 
-        init(ftQuota: UFix64, nftQuota: UInt64) {
-            self.ftQuota = ftQuota
-            self.nftQuota = nftQuota
+        init(quota: UFix64) {
+            self.quota = quota
+            self.claimedAmount = 0.0
+        }
 
-            self.claimable = true
-            self.ftClaimedAmount = 0.0
-            self.nftClaimedIds = []
+        // check if claimable
+        pub fun isClaimable(): Bool {
+            return self.claimedAmount < self.quota
         }
 
         // update FT claimed amount
-        access(contract) fun updateFTClaimed(amount: UFix64) {
+        access(contract) fun updateClaimed(amount: UFix64) {
             pre {
-                self.ftQuota >= amount + self.ftClaimedAmount: "FT Quota is the maximium claimable amount."
+                self.quota >= amount + self.claimedAmount: "FT Quota is the maximium claimable amount."
             }
             post {
-                self.ftClaimedAmount == before(self.ftClaimedAmount) + amount
+                self.claimedAmount == before(self.claimedAmount) + amount
             }
-            self.ftClaimedAmount = self.ftClaimedAmount + amount
-            self.updateClaimable()
+            self.claimedAmount = self.claimedAmount + amount
+        }
+    }
+
+    // Struct of nft whitelist info
+    pub struct NonFungibleWhitelist: IWhitelistInfo {
+        // constants
+        pub let quota: UInt64
+        // variable
+        pub var claimedIds: [UInt64]
+
+        init(quota: UInt64) {
+            self.quota = quota
+            self.claimedIds = []
+        }
+
+        // check if claimable
+        pub fun isClaimable(): Bool {
+            return self.claimedIds.length < Int(self.quota)
         }
 
         // update NFT claimed amount
-        access(contract) fun updateNFTClaimed(ids: [UInt64]) {
+        access(contract) fun updateClaimed(ids: [UInt64]) {
             pre {
-                Int(self.nftQuota) >= ids.length + self.nftClaimedIds.length: "NFT Quota is the maximium claimable amount."
+                Int(self.quota) >= ids.length + self.claimedIds.length: "NFT Quota is the maximium claimable amount."
             }
             post {
-                self.nftClaimedIds.length == before(self.nftClaimedIds.length) + ids.length
+                self.claimedIds.length == before(self.claimedIds.length) + ids.length
             }
             for id in ids {
-                if !self.nftClaimedIds.contains(id) {
-                    self.nftClaimedIds.append(id)
+                if !self.claimedIds.contains(id) {
+                    self.claimedIds.append(id)
                 }
             }
-            self.updateClaimable()
-        }
-
-        access(self) fun updateClaimable() {
-            if self.ftClaimedAmount == self.ftQuota && self.nftClaimedIds.length == Int(self.nftQuota) {
-                self.claimable = false
-            }
         }
     }
-    
-    pub resource interface AirdropPoolPublic {
 
-    }
-
-    // Resource of the airdrop pool
-    pub resource AirdropPool: AirdropPoolPublic {
-        access(self) let tokenType: Type
-        access(self) let collection: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
-        // access(self) let claims: {}
-        access(self) let whitelist: {String: WhitelistInfo}
+    // A struct of airdrop pool display
+    pub struct AirdropPoolDisplay {
+        pub let name: String
+        pub let description: String
+        pub let image: String
 
         init(
-            type: Type,
-            collection: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>,
-            whitelist: {String: WhitelistInfo}
+            name: String,
+            description: String,
+            image: String,
         ) {
-            self.tokenType = type
-            self.collection = collection
+            self.name = name
+            self.description = description
+            self.image = image
+        }
+    }
+
+    // An interface of all Airdrop pool
+    pub resource interface AirdropPoolPublic {
+        // return the airdrop display
+        pub fun getDisplay(): AirdropPoolDisplay
+        // check if the pool is claimable
+        pub fun isPoolClaimable(): Bool
+        // check is the address has been claimed
+        pub fun hasClaimed(address: Address): Bool
+        // check if the address is claimable
+        pub fun isClaimable(address: Address): Bool
+    }
+
+    // An interface of FT Airdrop pool
+    pub resource interface AirdropFungiblePoolPublic {
+
+    }
+
+    pub resource AirdropFungibleTokenPool: AirdropPoolPublic, AirdropFungiblePoolPublic {
+        access(self) let display: AirdropPoolDisplay
+
+        access(self) let tokenProvider: Capability<&{FungibleToken.Provider, FungibleToken.Balance}>
+        access(self) let whitelist: {String: FungibleWhitelist}
+        access(self) let totalQuota: UFix64
+
+        access(self) var totalClaimed: UFix64
+        access(self) var claimed: {Address: UFix64}
+
+        init(
+            _ display: AirdropPoolDisplay,
+            provider: Capability<&{FungibleToken.Provider, FungibleToken.Balance}>,
+            whitelist: {String: FungibleWhitelist}
+        ) {
+            self.display = display
+
+            self.tokenProvider = provider
+
+            var totalQuota: UFix64 = 0.0
             self.whitelist = whitelist
+            for key in whitelist.keys {
+                let one = whitelist[key]!
+                totalQuota = totalQuota + one.quota
+            }
+            self.totalQuota = totalQuota
+            self.totalClaimed = 0.0
+            self.claimed = {}
         }
 
         // --- Getters - Public Interfaces ---
+
+        pub fun getDisplay(): AirdropPoolDisplay {
+            return self.display
+        }
+
+        pub fun isPoolClaimable(): Bool {
+            return self.totalClaimed < self.totalQuota
+        }
+
+        pub fun hasClaimed(address: Address): Bool {
+            return self.claimed[address] != nil && self.claimed[address]! > 0.0
+        }
+
+        pub fun isClaimable(address: Address): Bool {
+            let floid = Floid.borrowIdentifier(address) ?? panic("Failed to borrow floid.")
+            let abStore = floid.borrowAddressBindingStore() ?? panic("Failed to borrow to address binding store.")
+
+            let bindings: [FloidUtils.AddressID] = abStore.getBindedAddressIDs()
+            var info: FungibleWhitelist? = nil
+            for one in bindings {
+                let bindingKey = one.toString()
+                if self.whitelist.containsKey(bindingKey) {
+                    info = self.whitelist[bindingKey]
+                    break
+                }
+            }
+            if info == nil {
+                return false
+            }
+            return info!.isClaimable()
+        }
 
         // --- Getters - Private Interfaces ---
 
@@ -117,21 +206,55 @@ pub contract FloidAirdrop {
         // --- Self Only ---
     }
 
+    // An interface of NFT Airdrop pool
+    pub resource interface AirdropNonFungiblePoolPublic {
+
+    }
+
+    // Resource of the airdrop pool
+    pub resource AirdropNonFungibleTokenPool: AirdropPoolPublic, AirdropNonFungiblePoolPublic {
+    //     access(self) let tokenType: Type
+    //     access(self) let collection: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>
+    //     access(self) let whitelist: {String: WhitelistInfo}
+
+    //     init(
+    //         type: Type,
+    //         collection: Capability<&{NonFungibleToken.Provider, NonFungibleToken.CollectionPublic}>,
+    //         whitelist: {String: WhitelistInfo}
+    //     ) {
+    //         self.tokenType = type
+    //         self.collection = collection
+    //         self.whitelist = whitelist
+    //     }
+
+    //     // --- Getters - Public Interfaces ---
+
+    //     // --- Getters - Private Interfaces ---
+
+    //     // --- Setters - Contract Only ---
+
+    //     // --- Self Only ---
+    }
+
     // A public interface of AirdropDashboard
     pub resource interface AirdropDashboardPublic {
-        // borrow the reference of airdrop pool
-        pub fun borrowAirdropPool(id: UInt64): &AirdropPool{AirdropPoolPublic}
+        // borrow the reference of airdrop fungible pool
+        pub fun borrowAirdropFungiblePool(id: UInt64): &{AirdropPoolPublic, AirdropFungiblePoolPublic}
+        // borrow the reference of airdrop nonfungible pool
+        pub fun borrowAirdropNonFungiblePool(id: UInt64): &{AirdropPoolPublic, AirdropNonFungiblePoolPublic}
     }
 
     // A private interface of AirdropDashboard
     pub resource interface AirdropDashboardPrivate {
         // borrow private reference
-        pub fun borrowAirdropPoolRef(id: UInt64): &AirdropPool
+        pub fun borrowAirdropFungiblePoolRef(id: UInt64): &AirdropFungibleTokenPool
+        // borrow private reference
+        pub fun borrowAirdropNonFungiblePoolRef(id: UInt64): &AirdropNonFungibleTokenPool
     }
 
     // Resource of the AirdropDashboard
     pub resource AirdropDashboard: AirdropDashboardPublic, AirdropDashboardPrivate {
-        access(self) let airdrops: @{UInt64: AirdropPool}
+        access(self) let airdrops: @{UInt64: {AirdropPoolPublic}}
 
         init() {
             self.airdrops <- {}
@@ -143,18 +266,18 @@ pub contract FloidAirdrop {
 
         // --- Getters - Public Interfaces ---
 
-        pub fun borrowAirdropPool(id: UInt64): &AirdropPool{AirdropPoolPublic} {
-            return self.borrowAirdropPoolRef(id: id) as &AirdropPool{AirdropPoolPublic}
-        }
+        // pub fun borrowAirdropPool(id: UInt64): &AirdropPool{AirdropPoolPublic} {
+        //     return self.borrowAirdropPoolRef(id: id) as &AirdropPool{AirdropPoolPublic}
+        // }
 
         // --- Getters - Private Interfaces ---
 
-        pub fun borrowAirdropPoolRef(id: UInt64): &AirdropPool {
-            pre {
-                self.airdrops[id] != nil: "Airdrop pool does not exist in the dashboard!"
-            }
-            return (&self.airdrops[id] as &AirdropPool?)!
-        }
+        // pub fun borrowAirdropPoolRef(id: UInt64): &AirdropPool {
+        //     pre {
+        //         self.airdrops[id] != nil: "Airdrop pool does not exist in the dashboard!"
+        //     }
+        //     return (&self.airdrops[id] as &AirdropPool?)!
+        // }
 
 
         // --- Setters - Contract Only ---
@@ -170,6 +293,7 @@ pub contract FloidAirdrop {
     }
 
     init() {
+        // paths
         self.FloidAirdropDashboardStoragePath = /storage/FloidAirdropDashboardPath
         self.FloidAirdropDashboardPublicPath = /public/FloidAirdropDashboardPath
 

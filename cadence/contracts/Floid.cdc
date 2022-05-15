@@ -312,7 +312,7 @@ pub contract Floid: FloidInterface {
     }
 
     // borrow the public identifier by address
-    pub fun borrowIdentifier(user: Address): &Identifier{FloidPublic}? {
+    pub fun borrowIdentifier(_ user: Address): &Identifier{FloidPublic}? {
         return getAccount(user)
             .getCapability(self.FloidPublicPath)
             .borrow<&Identifier{FloidPublic}>()
