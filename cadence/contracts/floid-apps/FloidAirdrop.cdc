@@ -26,8 +26,8 @@ pub contract FloidAirdrop {
 
     pub event ContractInitialized()
     pub event FloidAirdropPoolCreated(owner: Address, id: UInt64)
-    pub event FloidAirdropNonFungibleTokenClaimed(type: Type, nftID: UInt64, recipient: Address)
     pub event FloidAirdropFungibleTokenClaimed(type: Type, amount: UFix64, recipient: Address)
+    pub event FloidAirdropNonFungibleTokenClaimed(type: Type, nftID: UInt64, recipient: Address)
 
     /**    ____ _  _ _  _ ____ ___ _ ____ _  _ ____ _    _ ___ _   _
        *   |___ |  | |\ | |     |  | |  | |\ | |__| |    |  |   \_/
@@ -126,14 +126,17 @@ pub contract FloidAirdrop {
         // check if the pool is claimable
         pub fun isPoolClaimable(): Bool
         // check is the address has been claimed
-        pub fun hasClaimed(address: Address): Bool
+        pub fun hasClaimed(_ address: Address): Bool
         // check if the address is claimable
-        pub fun isClaimable(address: Address): Bool
+        pub fun isClaimable(_ address: Address): Bool
     }
 
     // An interface of FT Airdrop pool
     pub resource interface AirdropFungiblePoolPublic {
-
+        // Claim the fungible token from pool
+        pub fun claim(
+            recipient: &FungibleToken.Vault
+        )
     }
 
     pub resource AirdropFungibleTokenPool: AirdropPoolPublic, AirdropFungiblePoolPublic {
@@ -176,27 +179,45 @@ pub contract FloidAirdrop {
             return self.totalClaimed < self.totalQuota
         }
 
-        pub fun hasClaimed(address: Address): Bool {
+        pub fun hasClaimed(_ address: Address): Bool {
             return self.claimed[address] != nil && self.claimed[address]! > 0.0
         }
 
-        pub fun isClaimable(address: Address): Bool {
-            let floid = Floid.borrowIdentifier(address) ?? panic("Failed to borrow floid.")
-            let abStore = floid.borrowAddressBindingStore() ?? panic("Failed to borrow to address binding store.")
-
-            let bindings: [FloidUtils.AddressID] = abStore.getBindedAddressIDs()
-            var info: FungibleWhitelist? = nil
-            for one in bindings {
-                let bindingKey = one.toString()
-                if self.whitelist.containsKey(bindingKey) {
-                    info = self.whitelist[bindingKey]
-                    break
-                }
-            }
+        pub fun isClaimable(_ address: Address): Bool {
+            var info: &FungibleWhitelist? = self.getClaimableInfo(address)
             if info == nil {
                 return false
             }
             return info!.isClaimable()
+        }
+
+        // Claim the fungible token from pool
+        pub fun claim(
+            recipient: &FungibleToken.Vault
+        ) {
+            pre {
+                self.isPoolClaimable(): "Currently pool is not claimable"
+                recipient.owner != nil: "Recipient owner should exist"
+            }
+            let claimer = recipient.owner!.address
+            let whitelistInfo = self.getClaimableInfo(claimer) ?? panic("Failed to get claimable whitelist info.")
+            // token provider
+            let tokenProvider = self.tokenProvider.borrow() ?? panic("Failed to borrow token provider.")
+            assert(recipient.getType().identifier == tokenProvider.getType().identifier, message: "Token should be same type.")
+            assert(whitelistInfo.quota <= tokenProvider.balance, message: "Not enougth token balance to claim.")
+
+            // transfer token
+            recipient.deposit(from: <- tokenProvider.withdraw(amount: whitelistInfo.quota))
+
+            // update claimed
+            whitelistInfo.updateClaimed(amount: whitelistInfo.quota)
+            self.totalClaimed = self.totalClaimed + whitelistInfo.quota
+
+            emit FloidAirdropFungibleTokenClaimed(
+                type: recipient.getType(),
+                amount: whitelistInfo.quota,
+                recipient: claimer
+            )
         }
 
         // --- Getters - Private Interfaces ---
@@ -204,6 +225,22 @@ pub contract FloidAirdrop {
         // --- Setters - Contract Only ---
 
         // --- Self Only ---
+
+        access(self) fun getClaimableInfo(_ address: Address): &FungibleWhitelist? {
+            let bindings = FloidAirdrop.getBindingAddressIDs(address)
+            var info: &FungibleWhitelist? = nil
+            for one in bindings {
+                let bindingKey = one.toString()
+                if self.whitelist.containsKey(bindingKey) {
+                    let whitelist = &self.whitelist[bindingKey] as &FungibleWhitelist?
+                    if whitelist!.isClaimable() {
+                        info = whitelist
+                        break
+                    }
+                }
+            }
+            return info
+        }
     }
 
     // An interface of NFT Airdrop pool
@@ -290,6 +327,22 @@ pub contract FloidAirdrop {
     // create the AirdropDashboard resource
     pub fun createAirdropDashboard(): @AirdropDashboard {
         return <- create AirdropDashboard()
+    }
+
+    // get address ids binding to the address
+    access(contract) fun getBindingAddressIDs(_ address: Address): [FloidUtils.AddressID] {
+        let floid = Floid.borrowIdentifier(address)
+        if floid == nil {
+            return []
+        }
+
+        let abStore = floid!.borrowAddressBindingStore()
+        if abStore == nil {
+            return []
+        }
+
+        let bindings: [FloidUtils.AddressID] = abStore!.getBindedAddressIDs()
+        return bindings
     }
 
     init() {
