@@ -22,19 +22,14 @@
   "homepage": "https://github.com/FlowFans/floid#readme",
   "scripts": {
     "start": "node .output/server/index.mjs",
-    "dev": "nuxt dev",
-    "build": "nuxt build",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "dev": "nuxi dev",
+    "build": "nuxi build",
+    "generate": "nuxi generate",
+    "preview": "nuxi preview",
     "lint": "eslint --ext .ts,.vue web && stylelint **/*.vue",
     "update:emulator": "flow project deploy --update",
     "update:testnet": "npx dotenv-cli -e .env.testnet -- flow project deploy --network=testnet -f flow.json -f flow.testnet.json --update",
     "prepare": "husky install"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "devDependencies": {
     "@types/node": "^17.0.31",
@@ -43,11 +38,12 @@
     "dotenv-cli": "^5.1.0",
     "eslint": "^8.15.0",
     "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-nuxt": "^3.2.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-vue": "^8.7.1",
     "husky": "^8.0.1",
     "lint-staged": "^12.4.1",
-    "nuxt3": "latest",
+    "nuxt": "^3.0.0-rc.3",
     "postcss-html": "^1.4.1",
     "prettier": "^2.6.2",
     "stylelint": "^14.8.2",
