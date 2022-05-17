@@ -42,7 +42,44 @@ module.exports = {
     container: {
       center: true,
     },
-    extend: {},
+    extend: {
+      screens: {
+        "2xl": "1372px",
+      },
+      screens: {
+        "2xl": "1372px",
+        "3xl": "1536px",
+      },
+      colors: {
+        gray: {
+          darkest: "#30353E",
+          dark: "#444444",
+          DEFAULT: "#5C626F",
+          light: "#707376",
+          lightest: "#999999",
+        },
+        green: {
+          muted: "#66D78F",
+          dark: "#17DA88",
+          DEFAULT: "#00EF8B",
+        },
+        blue: {
+          DEFAULT: "#1972A4",
+        },
+        gold: {
+          DEFAULT: "#E67B49",
+        },
+        purple: {
+          DEFAULT: "#512BBD",
+        },
+        red: {
+          DEFAULT: "#E55A3D",
+        },
+      },
+      minWidth: {
+        40: "10rem",
+      },
+    },
   },
   variants: {},
   plugins: [],
