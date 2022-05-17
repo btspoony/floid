@@ -5,16 +5,25 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 export default defineNuxtConfig({
   // set source dir
   srcDir: "src/",
+  // Environment Variables
+  runtimeConfig: {},
   // ts config
   typescript: {
     shim: false,
   },
+  modules: [
+    // Doc: https://github.com/nuxt-community/tailwindcss-module
+    "@nuxtjs/tailwindcss",
+  ],
   // Build transpile
   build: {
     transpile: ["@onflow/fcl"],
+    postcss: {
+      postcssOptions: {
+        plugins: ["postcss-import", "tailwindcss", "autoprefixer"],
+      },
+    },
   },
-  // Environment Variables
-  runtimeConfig: {},
   // vite configure
   vite: {
     // raw assets
