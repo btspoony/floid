@@ -56,7 +56,6 @@
     "AddressBindingStore": "./cadence/contracts/floid-stores/AddressBindingStore.cdc",
     "SocialIDStore": "./cadence/contracts/floid-stores/SocialIDStore.cdc",
     "Floid": "./cadence/contracts/Floid.cdc",
-    "FloidWhitelist": "./cadence/contracts/floid-apps/FloidWhitelist.cdc",
     "FloidAirdrop": "./cadence/contracts/floid-apps/FloidAirdrop.cdc"
 	},
 	"deployments": {
@@ -72,7 +71,6 @@
         "AddressBindingStore",
         "SocialIDStore",
         "Floid",
-        "FloidWhitelist",
         "FloidAirdrop"
       ]
     }
