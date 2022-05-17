@@ -26,7 +26,7 @@
     "build": "nuxi build",
     "generate": "nuxi generate",
     "preview": "nuxi preview",
-    "lint": "eslint --ext .ts,.vue web && stylelint **/*.vue",
+    "lint": "eslint --ext .ts,.vue src && stylelint **/*.vue",
     "update:emulator": "flow project deploy --update",
     "update:testnet": "npx dotenv-cli -e .env.testnet -- flow project deploy --network=testnet -f flow.json -f flow.testnet.json --update",
     "prepare": "husky install"

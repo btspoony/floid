@@ -2,8 +2,8 @@ import { defineNuxtConfig } from "nuxt";
 
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
-  // change source dir to web/
-  srcDir: "web/",
+  // set source dir
+  srcDir: "src/",
   // ts config
   typescript: {
     shim: false,
