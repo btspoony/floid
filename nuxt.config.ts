@@ -18,11 +18,6 @@ export default defineNuxtConfig({
   // Build transpile
   build: {
     transpile: ["@onflow/fcl"],
-    postcss: {
-      postcssOptions: {
-        plugins: ["postcss-import", "tailwindcss", "autoprefixer"],
-      },
-    },
   },
   // vite configure
   vite: {

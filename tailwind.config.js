@@ -1,17 +1,5 @@
 module.exports = {
   content: ["./src/**/*.{js,ts,vue}"],
-  purge: {
-    enabled: process.env.NODE_ENV === "production",
-    layers: ["components", "utilities"],
-    content: [
-      "./src/composables/**/*.{js,ts}",
-      "./src/components/**/*.vue",
-      "./src/layouts/**/*.vue",
-      "./src/pages/**/*.vue",
-      "./src/plugins/**/*.{js,ts}",
-      "./src/nuxt.config.{js,ts}",
-    ],
-  },
   theme: {
     fontFamily: {
       sans: [
@@ -81,6 +69,4 @@ module.exports = {
       },
     },
   },
-  variants: {},
-  plugins: [],
 };
