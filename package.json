@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@onflow/fcl": "latest",
+    "@onflow/types": "^1.0.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.0"
   }
