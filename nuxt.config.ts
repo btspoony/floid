@@ -11,6 +11,7 @@ export default defineNuxtConfig({
   typescript: {
     shim: false,
   },
+  // installed modules
   modules: [
     // Doc: https://github.com/nuxt-community/tailwindcss-module
     "@nuxtjs/tailwindcss",
