@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-emerald-50;
-  }
-}
-
 @layer utilities {
   .filter-none {
     filter: none;

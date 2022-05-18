@@ -25,12 +25,13 @@
     <Link rel="manifest" href="/site.webmanifest" />
   </Head>
 
-  </Html>
+  <Body class="bg-primary">
+    <BaseHeader />
+    <NuxtPage />
+    <BaseFooter />
+  </Body>
 
-  <!-- Markup shared across all pages, ex: NavBar -->
-  <BaseHeader />
-  <NuxtPage />
-  <BaseFooter />
+  </Html>
 </template>
 
 <script setup>
