@@ -37,36 +37,29 @@ module.exports = {
         "2xl": "1372px",
         "3xl": "1536px",
       },
-      colors: {
-        gray: {
-          darkest: "#30353E",
-          dark: "#444444",
-          DEFAULT: "#5C626F",
-          light: "#707376",
-          lightest: "#999999",
-        },
-        green: {
-          muted: "#66D78F",
-          dark: "#17DA88",
-          DEFAULT: "#00EF8B",
-        },
-        blue: {
-          DEFAULT: "#1972A4",
-        },
-        gold: {
-          DEFAULT: "#E67B49",
-        },
-        purple: {
-          DEFAULT: "#512BBD",
-        },
-        red: {
-          DEFAULT: "#E55A3D",
-        },
-      },
       minWidth: {
         40: "10rem",
       },
     },
   },
-  plugins: [require("@tailwindcss/typography")],
+  plugins: [require("@tailwindcss/typography"), require("daisyui")],
+  // daisyUI config (optional)
+  daisyui: {
+    themes: [
+      {
+        floid: {
+          primary: "#128F8B",
+          secondary: "#3DE0D2",
+          accent: "#65a30d",
+          neutral: "#4b5563",
+          "base-100": "#effffe",
+          info: "#ccfbf1",
+          success: "#4ade80",
+          warning: "#fcd34d",
+          error: "#F34949",
+        },
+      },
+      "forest",
+    ],
+  },
 };
