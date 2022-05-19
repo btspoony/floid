@@ -25,7 +25,7 @@
     <Link rel="manifest" href="/site.webmanifest" />
   </Head>
 
-  <Body class="bg-primary">
+  <Body>
     <BaseHeader />
     <NuxtPage />
     <BaseFooter />
