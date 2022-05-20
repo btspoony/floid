@@ -1,6 +1,6 @@
 <template>
   <!-- override html and head -->
-  <Html :lang="locale">
+  <Html :lang="locale" :class="theme">
 
   <Head>
     <Title>{{ route.meta.title ?? "Home" }}</Title>
@@ -25,7 +25,7 @@
     <Link rel="manifest" href="/site.webmanifest" />
   </Head>
 
-  <Body>
+  <Body :data-theme="dataTheme">
     <BaseHeader />
     <NuxtPage />
     <BaseFooter />
@@ -37,6 +37,11 @@
 <script setup>
 const route = useRoute();
 const locale = useLocale();
+const theme = useTheme();
+
+const dataTheme = computed(() => {
+  return theme === "dark" ? "forest" : "floid";
+});
 
 const description = ref(
   "A DID Protocol on Flow blockchain, binding addresses from EVM compatible blockchains."
