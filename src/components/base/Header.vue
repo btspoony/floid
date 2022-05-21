@@ -28,9 +28,11 @@
             </div>
           </div>
         </div>
-        <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+        <div
+          class="absolute inset-y-0 right-0 flex space-x-2 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
           <ClientOnly>
             <WidgetThemeToggle />
+            <WidgetConnect class="hidden sm:block" />
           </ClientOnly>
         </div>
       </div>
@@ -43,6 +45,10 @@
               ? 'border-primary hover:text-primary-focus border-l-4'
               : 'hover:text-secondary dark:text-base-content dark:hover:text-secondary',
           ]" :aria-current="item.current ? 'page' : undefined">{{ item.name }}</DisclosureButton>
+          <div class="divider"></div>
+          <div class="flex items-center justify-center">
+            <WidgetConnect />
+          </div>
         </div>
       </DisclosurePanel>
     </Disclosure>
@@ -60,6 +66,7 @@ import {
   MenuItems,
 } from "@headlessui/vue";
 import { MenuIcon, XIcon } from "@heroicons/vue/outline";
+import Connect from "../widget/Connect.vue";
 
 const navigation = [
   { name: "Airdrops", href: "#", current: false },
