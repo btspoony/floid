@@ -3,7 +3,7 @@
     <div class="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
       <div class="divider"></div>
       <div class="flex flex-wrap space-x-4 items-center justify-between min-h-16 text-base-content text-sm">
-        <div class="basis-full sm:basis-auto sm:grow inline-block">
+        <div class="flex items-center justify-center sm:justify-start basis-full sm:basis-auto sm:grow mb-4 sm:mb-0">
           <img class="hidden dark:inline-block h-8 w-auto" src="~/assets/image/badge-open-source.svg"
             alt="OpenSource" />
           <span class="px-2">
