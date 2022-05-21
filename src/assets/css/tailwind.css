@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  a {
+    @apply no-underline;
+
+    &:hover {
+      @apply transition-all ease-in-out duration-300;
+    }
+  }
+}
+
+@layer components {
+  a.link-highlight {
+    @apply text-primary border-primary;
+
+    &:hover {
+      @apply text-secondary border-y-2 border-secondary;
+    }
+  }
+}
+
 @layer utilities {
   .filter-none {
     filter: none;

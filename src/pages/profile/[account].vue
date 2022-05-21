@@ -1,5 +1,5 @@
 <template>
-  <main class="container mx-auto px-4">Profile</main>
+  <main class="container mx-auto">Profile</main>
 </template>
 
 <script setup>

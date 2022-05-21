@@ -1,5 +1,5 @@
 <template>
-  <main class="container mx-auto px-4">Home</main>
+  <main class="container mx-auto">Home</main>
 </template>
 
 <script setup>

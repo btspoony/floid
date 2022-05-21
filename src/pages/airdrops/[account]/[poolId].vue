@@ -1,5 +1,5 @@
 <template>
-  <main class="container mx-auto px-4">AirdropPool</main>
+  <main class="container mx-auto">AirdropPool</main>
 </template>
 
 <script setup>

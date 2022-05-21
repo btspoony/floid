@@ -31,13 +31,6 @@ module.exports = {
       center: true,
     },
     extend: {
-      screens: {
-        "2xl": "1372px",
-      },
-      screens: {
-        "2xl": "1372px",
-        "3xl": "1536px",
-      },
       minWidth: {
         40: "10rem",
       },
@@ -53,6 +46,7 @@ module.exports = {
           secondary: "#3DE0D2",
           accent: "#65a30d",
           neutral: "#4b5563",
+          "base-100": "#fafafa",
           info: "#ccfbf1",
           success: "#4ade80",
           warning: "#fcd34d",

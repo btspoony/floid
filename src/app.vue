@@ -30,7 +30,9 @@
 
     <!-- Layout -->
     <BaseHeader />
-    <NuxtPage />
+    <div class="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <NuxtPage />
+    </div>
     <BaseFooter />
   </div>
 </template>

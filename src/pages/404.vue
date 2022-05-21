@@ -1,5 +1,5 @@
 <template>
-  <main class="container mx-auto px-4">404 NotFound</main>
+  <main class="container mx-auto">404 NotFound</main>
 </template>
 
 <script setup>

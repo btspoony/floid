@@ -1,5 +1,6 @@
 <template>
-  <button type="button" class="btn btn-circle p-1 hover:text-white" @click="toggle">
+  <button type="button" class="p-1 rounded-full hover:text-primary dark:hover:text-white focus:outline-none"
+    @click="toggle">
     <span class="sr-only">View ThemeToggle: {{ theme }}</span>
     <SunIcon v-if="theme === 'dark'" class="h-6 w-6" />
     <MoonIcon v-else class="h-6 w-6" />
