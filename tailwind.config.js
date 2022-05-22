@@ -51,6 +51,10 @@ module.exports = {
           success: "#4ade80",
           warning: "#fcd34d",
           error: "#F34949",
+
+          "--rounded-box": "1rem",
+          "--rounded-btn": "2rem",
+          "--btn-focus-scale": "1", // scale transform of button when you focus on it
         },
       },
       "forest",
