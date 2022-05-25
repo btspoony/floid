@@ -47,7 +47,9 @@
           ]" :aria-current="item.current ? 'page' : undefined">{{ item.name }}</DisclosureButton>
           <div class="divider"></div>
           <div class="flex items-center justify-center">
-            <WidgetConnect />
+            <ClientOnly>
+              <WidgetConnect />
+            </ClientOnly>
           </div>
         </div>
       </DisclosurePanel>
@@ -66,7 +68,6 @@ import {
   MenuItems,
 } from "@headlessui/vue";
 import { MenuIcon, XIcon } from "@heroicons/vue/outline";
-import Connect from "../widget/Connect.vue";
 
 const navigation = [
   { name: "Airdrops", href: "#", current: false },
