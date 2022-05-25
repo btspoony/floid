@@ -1,6 +1,6 @@
 <template>
   <footer class="max-w-full bg-base-100">
-    <div class="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+    <BaseContainer>
       <div class="divider"></div>
       <div class="flex flex-wrap space-x-4 items-center justify-between min-h-16 text-base-content text-sm">
         <div class="flex items-center justify-center sm:justify-start basis-full sm:basis-auto sm:grow mb-4 sm:mb-0">
@@ -25,7 +25,7 @@
         </div>
         <div class="flex-none px-2">© 2022 floid.pro</div>
       </div>
-    </div>
+    </BaseContainer>
   </footer>
 </template>
 
