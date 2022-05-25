@@ -16,10 +16,6 @@ export default defineNuxtConfig({
     // Doc: https://github.com/nuxt-community/tailwindcss-module
     "@nuxtjs/tailwindcss",
   ],
-  // Build transpile
-  build: {
-    transpile: ["@onflow/fcl"],
-  },
   // vite configure
   vite: {
     // raw assets

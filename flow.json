@@ -1,28 +1,28 @@
 {
-	"emulators": {
-		"default": {
-			"port": 3569,
-			"serviceAccount": "emulator-account"
-		}
-	},
+  "emulators": {
+    "default": {
+      "port": 3569,
+      "serviceAccount": "emulator-account"
+    }
+  },
   "devWallet": {
     "accessNode": {
       "endpoint": "http://localhost:8080"
     },
     "port": 8701
   },
-	"networks": {
-		"emulator": "127.0.0.1:3569",
-		"mainnet": "access.mainnet.nodes.onflow.org:9000",
-		"testnet": "access.devnet.nodes.onflow.org:9000"
-	},
-	"accounts": {
-		"emulator-account": {
-			"address": "f8d6e0586b0a20c7",
-			"key": "edf15223cbdbcf8b035821c5eea51bcb2d2ac84805f0f937878e86e22447b66e"
-		}
-	},
-	"contracts": {
+  "networks": {
+    "emulator": "127.0.0.1:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
+  },
+  "accounts": {
+    "emulator-account": {
+      "address": "f8d6e0586b0a20c7",
+      "key": "edf15223cbdbcf8b035821c5eea51bcb2d2ac84805f0f937878e86e22447b66e"
+    }
+  },
+  "contracts": {
     "NonFungibleToken": {
       "source": "./cadence/contracts/core/NonFungibleToken.cdc",
       "aliases": {
@@ -57,8 +57,8 @@
     "SocialIDStore": "./cadence/contracts/floid-stores/SocialIDStore.cdc",
     "Floid": "./cadence/contracts/Floid.cdc",
     "FloidAirdrop": "./cadence/contracts/floid-apps/FloidAirdrop.cdc"
-	},
-	"deployments": {
+  },
+  "deployments": {
     "emulator": {
       "emulator-account": [
         "NonFungibleToken",
@@ -74,6 +74,5 @@
         "FloidAirdrop"
       ]
     }
-	}
+  }
 }
- 
