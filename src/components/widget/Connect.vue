@@ -1,17 +1,22 @@
 <template>
-  <div v-if="current?.loggedIn">
-    <span>{{ current?.addr ?? "No Address" }}</span>
-    <button class="btn btn-sm btn-circle btn-ghost" @click="logout">
-      <LogoutIcon />
+  <div>
+    <div v-if="current?.loggedIn"
+      class="flex items-center justify-between rounded-full bg-primary text-primary-content">
+      <span class="flex-auto h-4 leading-4 pl-4 pr-1 font-medium">
+        {{ current?.addr ?? "No Address" }}
+      </span>
+      <button class="flex-none btn btn-sm btn-circle btn-primary" @click="logout">
+        <LogoutIcon class="fill-current h-4 w-4" />
+      </button>
+    </div>
+    <button v-else class="btn btn-sm btn-primary" @click="login">
+      Connect Wallet
     </button>
   </div>
-  <button v-else class="btn btn-sm btn-primary" @click="login">
-    Connect Wallet
-  </button>
 </template>
 
 <script setup lang="ts">
-import { LogoutIcon } from "@heroicons/vue/outline";
+import { LogoutIcon } from "@heroicons/vue/solid";
 
 const current = useFlowAccount();
 

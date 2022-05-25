@@ -1,13 +1,18 @@
 <template>
-  <button type="button" class="p-1 rounded-full hover:text-primary dark:hover:text-white focus:outline-none"
-    @click="toggle">
+  <label
+    class="swap swap-rotate hover:text-primary dark:hover:text-white focus:outline-none"
+  >
+    <!-- this hidden checkbox controls the state -->
+    <input v-model="isLight" type="checkbox" />
     <span class="sr-only">View ThemeToggle: {{ theme }}</span>
-    <SunIcon v-if="theme === 'dark'" class="h-6 w-6" />
-    <MoonIcon v-else class="h-6 w-6" />
-  </button>
+    <!-- volume on icon -->
+    <SunIcon class="swap-off fill-current h-6 w-6" />
+    <!-- volume off icon -->
+    <MoonIcon class="swap-on fill-current h-6 w-6" />
+  </label>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { SunIcon, MoonIcon } from "@heroicons/vue/outline";
 
 const theme = useTheme();
@@ -26,13 +31,18 @@ watchEffect(() => {
   }
 });
 
-function toggle(event) {
-  if (theme.value === "dark") {
-    theme.value = "light";
-    localStorage.setItem("theme", "light");
-  } else {
-    theme.value = "dark";
-    localStorage.setItem("theme", "dark");
-  }
-}
+const isLight = computed({
+  get(): boolean {
+    return theme.value !== "dark";
+  },
+  set(value: boolean) {
+    if (value && theme.value !== "light") {
+      theme.value = "light";
+      localStorage.setItem("theme", "light");
+    } else if (!value && theme.value !== "dark") {
+      theme.value = "dark";
+      localStorage.setItem("theme", "dark");
+    }
+  },
+});
 </script>

@@ -19,9 +19,9 @@
           <div class="hidden sm:block sm:ml-6">
             <div class="flex space-x-4">
               <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[
-                'inline-block align-middle px-3 py-5 h-16 text-primary text-base font-medium',
+                'inline-block align-middle px-3 py-5 h-16 text-base font-medium',
                 item.current
-                  ? 'border-primary hover:text-primary-focus border-b-4'
+                  ? 'text-primary border-primary hover:text-primary-focus border-b-4'
                   : 'hover:text-secondary dark:text-base-content dark:hover:text-secondary',
               ]" :aria-current="item.current ? 'page' : undefined">
                 {{ item.name }}</a>
