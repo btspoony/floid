@@ -1,7 +1,6 @@
 <template>
-  <footer class="max-w-full bg-base-100">
+  <footer class="max-w-full pt-8 pb-4 bg-gradient-to-t from-primary-content to-inherit">
     <BaseContainer>
-      <div class="divider"></div>
       <div class="flex flex-wrap space-x-4 items-center justify-between min-h-16 text-base-content text-sm">
         <div class="flex items-center justify-center sm:justify-start basis-full sm:basis-auto sm:grow mb-4 sm:mb-0">
           <img class="hidden dark:inline-block h-8 w-auto" src="~/assets/image/badge-open-source.svg"
