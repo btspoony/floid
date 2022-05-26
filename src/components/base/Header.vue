@@ -1,6 +1,14 @@
 <template>
-  <header class="max-w-full bg-base-100 shadow-md">
-    <Disclosure v-slot="{ open }" as="nav" class="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+  <header :class="[
+    'fixed inset-x-0 top-0 w-screen transition-all bg-white dark:bg-neutral',
+    scrollStatus.isOnTop || (!scrollStatus.isOnTop && scrollStatus.isScrollUp)
+      ? `translate-y-0 ${!scrollStatus.isOnTop ? 'shadow-sm' : ''}`
+      : 'shadow-none -translate-y-16 duration-400',
+  ]" :style="`--tw-bg-opacity: ${Math.max(
+  0,
+  Math.min(1, Math.floor((scrollStatus.lastScrollY / 64) * 100) * 0.01)
+)};`">
+    <Disclosure v-slot="{ open }" class="container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8" as="nav">
       <div class="relative flex items-center justify-between h-16">
         <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
           <!-- Mobile menu button-->
@@ -69,8 +77,27 @@ import {
 } from "@headlessui/vue";
 import { MenuIcon, XIcon } from "@heroicons/vue/outline";
 
+const scrollStatus = useScrollStatus();
+
 const navigation = [
   { name: "Airdrops", href: "#", current: false },
   { name: "About", href: "#", current: false },
 ];
+
+function handleScroll(event) {
+  let last = scrollStatus.value.lastScrollY;
+
+  scrollStatus.value.isOnTop = last < 64;
+  scrollStatus.value.isScrollUp = last - window.scrollY > 0;
+  scrollStatus.value.lastScrollY = window.scrollY;
+  console.log(window.scrollY);
+}
+
+onBeforeMount(() => {
+  window.addEventListener("scroll", handleScroll, { passive: true });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
 </script>

@@ -20,17 +20,11 @@ import { LogoutIcon } from "@heroicons/vue/solid";
 
 const current = useFlowAccount();
 
-watchEffect(() => {
-  try {
-    if (process.client) {
-      const { $fcl } = useNuxtApp();
-      $fcl.currentUser.subscribe((user) => {
-        current.value = user;
-      });
-    }
-  } catch (e) {
-    console.error(e);
-  }
+onMounted(() => {
+  const { $fcl } = useNuxtApp();
+  $fcl.currentUser.subscribe((user) => {
+    current.value = user;
+  });
 });
 
 function login() {

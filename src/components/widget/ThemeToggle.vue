@@ -1,7 +1,5 @@
 <template>
-  <label
-    class="swap swap-rotate hover:text-primary dark:hover:text-white focus:outline-none"
-  >
+  <label class="swap swap-rotate hover:text-primary dark:hover:text-white focus:outline-none">
     <!-- this hidden checkbox controls the state -->
     <input v-model="isLight" type="checkbox" />
     <span class="sr-only">View ThemeToggle: {{ theme }}</span>
@@ -17,7 +15,7 @@ import { SunIcon, MoonIcon } from "@heroicons/vue/outline";
 
 const theme = useTheme();
 
-watchEffect(() => {
+onMounted(() => {
   if (process.client) {
     if (
       localStorage.theme === "dark" ||
