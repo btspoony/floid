@@ -3,8 +3,8 @@
     <section class="hero min-h-screen bg-gradient-to-b from-base-100 to-primary-content">
       <BaseContainer>
         <div class="hero-content flex-col lg:flex-row-reverse mt-4 lg:mt-0">
-          <img class="object-cover max-w-sm rounded-lg shadow-2xl" src="~/assets/image/home-flow.jpg" alt="Flow Home" />
-          <div class="max-w-sm lg:max-w-lg prose text-center lg:text-left p-2 lg:pl-4 lg:pr-16">
+          <img class="object-cover max-w-sm rounded-lg" src="~/assets/image/home-flow.png" alt="Flow Home" />
+          <div class="max-w-sm lg:max-w-lg prose text-center lg:text-left p-2 lg:px-4">
             <h3 class="text-5xl font-bold drop-shadow-md">Welcome to FLOID</h3>
             <p class="font-semibold">
               A <span class="text-secondary-focus">DID</span> Protocol on
