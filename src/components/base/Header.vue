@@ -6,7 +6,7 @@
       : 'shadow-none -translate-y-16 duration-400',
   ]" :style="`--tw-bg-opacity: ${Math.max(
   0,
-  Math.min(1, Math.floor((scrollStatus.lastScrollY / 64) * 100) * 0.01)
+  Math.min(1, Math.floor((scrollStatus.lastScrollY / 64) * 90) * 0.01)
 )};`">
     <Disclosure v-slot="{ open }" class="container max-w-6xl mx-auto" as="nav">
       <div class="relative flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -82,7 +82,6 @@ watchEffect(
     navigation.forEach((element) => {
       let path = route.path + (route.hash || "");
       element.current = element.to === path;
-      console.log(element.name, element.current);
     });
   },
   { flush: "post" }
