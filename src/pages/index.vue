@@ -2,8 +2,8 @@
   <main class="max-w-full">
     <section class="hero min-h-screen bg-gradient-to-b from-base-100 to-primary-content">
       <BaseContainer>
-        <div class="hero-content flex-col lg:flex-row-reverse mt-8 lg:mt-0">
-          <img src="https://api.lorem.space/image/movie?w=240&h=360" class="max-w-sm rounded-lg shadow-2xl" />
+        <div class="hero-content flex-col lg:flex-row-reverse mt-4 lg:mt-0">
+          <img src="~/assets/image/flow-home.jpg" class="object-cover max-w-sm rounded-lg shadow-2xl" />
           <div class="max-w-sm lg:max-w-lg prose text-center lg:text-left p-2 lg:pl-4 lg:pr-16">
             <h3 class="text-5xl font-bold drop-shadow-md">Welcome to FLOID</h3>
             <p class="font-semibold">

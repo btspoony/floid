@@ -73,7 +73,7 @@ const scrollStatus = useScrollStatus();
 const route = useRoute();
 
 const navigation = reactive([
-  { name: "Airdrops", to: "/airdrops/create", current: false },
+  // { name: "Airdrops", to: "/airdrops/create", current: false },
   { name: "About", to: "/#about", current: false },
 ]);
 
