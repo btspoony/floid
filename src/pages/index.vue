@@ -38,6 +38,7 @@
 <script setup>
 definePageMeta({
   title: "Home",
+  layout: "default",
 });
 
 const loopWords = ref([

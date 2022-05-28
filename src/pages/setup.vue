@@ -5,5 +5,6 @@
 <script setup>
 definePageMeta({
   title: "Setup",
+  layout: "pure",
 });
 </script>

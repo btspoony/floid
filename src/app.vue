@@ -29,9 +29,9 @@
     </Html>
 
     <!-- Layout -->
-    <BaseHeader />
-    <NuxtPage />
-    <BaseFooter />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </div>
 </template>
 

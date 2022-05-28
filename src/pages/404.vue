@@ -5,5 +5,6 @@
 <script setup>
 definePageMeta({
   title: "404 NotFound",
+  layout: "pure",
 });
 </script>
