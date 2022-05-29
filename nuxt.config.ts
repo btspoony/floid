@@ -1,4 +1,5 @@
 import { defineNuxtConfig } from "nuxt";
+import svgLoader from "vite-svg-loader";
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
@@ -33,6 +34,8 @@ export default defineNuxtConfig({
   vite: {
     // raw assets
     assetsInclude: ["**/*.cdc"],
+    // plugins
+    plugins: [svgLoader()],
     // Dependency Pre-Bundling
     optimizeDeps: {
       esbuildOptions: {
