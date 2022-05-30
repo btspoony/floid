@@ -57,7 +57,13 @@ module.exports = {
           "--btn-focus-scale": "1", // scale transform of button when you focus on it
         },
       },
-      "forest",
+      {
+        forest: {
+          ...require("daisyui/src/colors/themes")["[data-theme=forest]"],
+          "base-100": "rgb(20, 38, 28)",
+          "base-200": "rgb(32, 50, 38)",
+        },
+      },
     ],
   },
 };

@@ -24,6 +24,10 @@
   div.page-container {
     @apply container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4;
   }
+
+  div.card {
+    @apply place-self-center bg-white dark:bg-base-200 rounded-lg shadow-lg;
+  }
 }
 
 @layer utilities {

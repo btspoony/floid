@@ -29,7 +29,7 @@
     </Html>
 
     <!-- Layout -->
-    <NuxtLayout>
+    <NuxtLayout class="bg-base-100">
       <NuxtPage />
     </NuxtLayout>
   </div>

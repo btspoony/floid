@@ -1,6 +1,6 @@
 <template>
   <header :class="[
-    'fixed inset-x-0 top-0 w-screen transition-transform bg-white dark:bg-base-200',
+    'fixed inset-x-0 top-0 w-screen transition-transform bg-white dark:bg-base-200 z-50',
     scrollStatus.isOnTop || (!scrollStatus.isOnTop && scrollStatus.isScrollUp)
       ? `translate-y-0 ${!scrollStatus.isOnTop ? 'shadow-sm' : ''}`
       : 'shadow-none -translate-y-16 duration-400',
