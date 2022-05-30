@@ -9,7 +9,7 @@
         <LogoutIcon class="fill-current h-4 w-4" />
       </button>
     </div>
-    <button v-else class="btn btn-sm btn-primary" @click="login">
+    <button v-else :class="['btn btn-sm btn-primary', props.full && 'btn-block']" @click="login">
       Connect Wallet
     </button>
   </div>
@@ -17,6 +17,13 @@
 
 <script setup lang="ts">
 import { LogoutIcon } from "@heroicons/vue/solid";
+
+interface Props {
+  full?: boolean;
+}
+const props = withDefaults(defineProps<Props>(), {
+  full: false,
+});
 
 const current = useFlowAccount();
 

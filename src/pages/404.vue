@@ -8,7 +8,7 @@
             <ArrowLeftIcon class="inline-block h-4" /> back to home
           </NuxtLink>
         </div>
-        <div class="object-cover w-[480px] h-[520px] bg-[url('assets/image/home-flow.png')]"></div>
+        <div class="flow-ball"></div>
       </div>
     </div>
   </main>
