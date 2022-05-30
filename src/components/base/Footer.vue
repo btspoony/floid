@@ -4,7 +4,7 @@
       <div class="flex flex-wrap items-center justify-center min-h-16 text-base-content text-sm">
         <div
           class="flex space-x-4 items-center justify-center sm:justify-start basis-full sm:basis-auto sm:grow mb-4 sm:mb-0">
-          <OpenSourceIcon class="inline-block fill-base-content stroke-base-content" />
+          <OpenSourceIcon class="hidden dark:inline-block fill-base-content stroke-base-content" />
           <span class="px-2">
             Contribute on
             <a href="https://github.com/FlowFans/floid" target="_blank" class="link-highlight">
