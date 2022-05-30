@@ -1,10 +1,10 @@
 <template>
   <footer class="max-w-full pt-8 pb-4 bg-gradient-to-t from-primary-content to-inherit">
     <div class="page-container">
-      <div class="flex flex-wrap space-x-4 items-center justify-between min-h-16 text-base-content text-sm">
-        <div class="flex items-center justify-center sm:justify-start basis-full sm:basis-auto sm:grow mb-4 sm:mb-0">
-          <img class="hidden dark:inline-block h-8 w-auto" src="~/assets/image/badge-open-source.svg"
-            alt="OpenSource" />
+      <div class="flex flex-wrap items-center justify-center min-h-16 text-base-content text-sm">
+        <div
+          class="flex space-x-4 items-center justify-center sm:justify-start basis-full sm:basis-auto sm:grow mb-4 sm:mb-0">
+          <OpenSourceIcon class="inline-block fill-base-content stroke-base-content" />
           <span class="px-2">
             Contribute on
             <a href="https://github.com/FlowFans/floid" target="_blank" class="link-highlight">
@@ -18,9 +18,10 @@
           </span>
         </div>
         <div class="flex-initial">
-          <img class="block dark:hidden h-8 w-auto" src="~/assets/image/built-onflow-green-black.svg"
+          <img class="block dark:hidden h-8 w-auto" src="~/assets/image/built-onflow-green-black.svg?url"
             alt="Build on Flow" />
-          <img class="hidden dark:block h-8 w-auto" src="~/assets/image/built-onflow-green.svg" alt="Build on Flow" />
+          <img class="hidden dark:block h-8 w-auto" src="~/assets/image/built-onflow-green.svg?url"
+            alt="Build on Flow" />
         </div>
         <div class="flex-none px-2">© 2022 floid.pro</div>
       </div>
@@ -28,4 +29,6 @@
   </footer>
 </template>
 
-<script setup lang="ts"></script>
+<script setup>
+import OpenSourceIcon from "~/assets/image/badge-open-source.svg";
+</script>

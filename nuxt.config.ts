@@ -35,7 +35,11 @@ export default defineNuxtConfig({
     // raw assets
     assetsInclude: ["**/*.cdc"],
     // plugins
-    plugins: [svgLoader()],
+    plugins: [
+      svgLoader({
+        defaultImport: "component",
+      }),
+    ],
     // Dependency Pre-Bundling
     optimizeDeps: {
       esbuildOptions: {

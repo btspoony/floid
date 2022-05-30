@@ -21,8 +21,8 @@
         </div>
         <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
           <NuxtLink class="flex-shrink-0 flex items-center" to="/">
-            <img class="block dark:hidden h-8 w-auto" src="~/assets/image/logo-colored.svg" alt="Floid" />
-            <img class="hidden dark:block h-8 w-auto" src="~/assets/image/logo-black.svg" alt="Floid" />
+            <img class="block dark:hidden h-8 w-auto" src="~/assets/image/logo-colored.svg?url" alt="Floid" />
+            <img class="hidden dark:block h-8 w-auto" src="~/assets/image/logo-black.svg?url" alt="Floid" />
           </NuxtLink>
           <div class="hidden sm:block sm:ml-6">
             <div class="flex space-x-4">
