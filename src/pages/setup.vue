@@ -4,12 +4,14 @@
       <ul class="steps">
         <li v-for="(one, index) in steps" :key="'step_' + index" :data-content="getStepContent(one, index)" :class="{
           step: true,
-          'step-primary': one.isCompleted || currentStep === index,
+          'step-primary': isStepCompleted(index) || currentStep === index,
         }">
           {{ one.label }}
         </li>
       </ul>
-      <div class="card min-w-[90%] min-h-[50vh]">FORM</div>
+      <div class="card min-w-[90%] min-h-[50vh]">
+        <NuxtPage />
+      </div>
     </div>
   </main>
 </template>
@@ -21,48 +23,78 @@ definePageMeta({
 });
 
 const flowAccount = useFlowAccount();
+const route = useRoute();
+const router = useRouter();
 
 type StepData = {
   label: string;
-  isCompleted: boolean;
+  page: string;
+  step: number;
 };
 
 const steps = reactive<StepData[]>([
   {
     label: "Connect Wallet",
-    isCompleted: false,
+    page: "",
+    step: 0,
   },
   {
     label: "Initialize",
-    isCompleted: false,
+    page: "init",
+    step: 1,
   },
   {
     label: "Sign with Ethers",
-    isCompleted: false,
+    page: "sign",
+    step: 2,
   },
   {
     label: "Bind to Floid",
-    isCompleted: false,
+    page: "bind",
+    step: 3,
   },
 ]);
 
-const currentStep = ref(0);
+const currentStep = useState<number>("currentSetupStep", () => ref(0));
 
 watchEffect(() => {
+  const paths = route.path.split("/");
+  let lastPath = paths[paths.length - 1];
+  if (lastPath === "setup") {
+    lastPath = "";
+  }
+
+  let currentSetupIndex = 0;
+  const found = steps.find((one) => one.page === lastPath);
+  if (found) {
+    currentSetupIndex = found.step;
+  }
+
   if (flowAccount.value?.loggedIn) {
     if (currentStep.value === 0) {
-      steps[0].isCompleted = true;
-      currentStep.value = 1;
+      currentSetupIndex = 1;
     }
   } else {
-    currentStep.value = 0;
-    for (const step of steps) {
-      step.isCompleted = false;
-    }
+    currentSetupIndex = 0;
+  }
+
+  const current = steps[currentSetupIndex];
+  if (current.page !== lastPath) {
+    router.replace("/setup/" + current.page);
+  } else {
+    currentStep.value = currentSetupIndex;
   }
 });
 
 function getStepContent(item: StepData, index: number): string {
-  return currentStep.value === index ? "" : item.isCompleted ? "✓" : undefined;
+  return currentStep.value === index
+    ? ""
+    : isStepCompleted(index)
+      ? "✓"
+      : undefined;
+}
+function isStepCompleted(index: number): boolean {
+  const step = steps[index];
+  return step && step.step <= currentStep.value;
 }
 </script>

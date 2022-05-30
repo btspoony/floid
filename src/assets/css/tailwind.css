@@ -26,7 +26,7 @@
   }
 
   div.card {
-    @apply place-self-center bg-white dark:bg-base-200 rounded-lg shadow-lg;
+    @apply place-self-center bg-white dark:bg-base-200 rounded-lg shadow-lg p-4;
   }
 }
 
