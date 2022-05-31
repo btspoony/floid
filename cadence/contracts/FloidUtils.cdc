@@ -184,4 +184,3 @@ pub contract FloidUtils {
         return AddressID(chain!, address: str.slice(from: parseIdx[1], upTo: str.length), referID: str.slice(from: parseIdx[0], upTo: parseIdx[1]))
     }
 }
- 

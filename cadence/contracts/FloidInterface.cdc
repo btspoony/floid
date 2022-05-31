@@ -23,7 +23,7 @@ pub contract interface FloidInterface {
         // borrow keyvalue store
         pub fun borrowStore(key: UInt8): &{StorePublic}
     }
-    
+
     // Resource of the Floid identifier
     pub resource Identifier: IdentifierPublic {
         // Dictionary to hold the Stores in the Identifier

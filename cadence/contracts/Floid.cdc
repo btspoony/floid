@@ -71,14 +71,14 @@ pub contract Floid: FloidInterface {
         // transfer store by key
         access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidInterface.StorePublic}
     }
-    
+
     // A private interface to Floid identifier
     pub resource interface FloidPrivate {
         // initialize a new store
         pub fun initializeStore(store: @{FloidInterface.StorePublic})
-        // inherit data from another Floid identifier 
+        // inherit data from another Floid identifier
         pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature)
-        // generate a transfer key to start a data transfer to another Floid identifier 
+        // generate a transfer key to start a data transfer to another Floid identifier
         pub fun generateTransferKey(type: GenericStoreType): String
     }
 
@@ -152,7 +152,7 @@ pub contract Floid: FloidInterface {
         pub fun borrowAddressBindingStore(): &AddressBindingStore.Store{AddressBindingStore.PublicInterface}? {
             return self.borrowAddressBindingStoreFull() as &AddressBindingStore.Store{AddressBindingStore.PublicInterface}?
         }
-        
+
         // borrow emerald id store
         pub fun borrowSocialIDStore(): &SocialIDStore.Store{SocialIDStore.PublicInterface}? {
             let store = &self.genericStores[GenericStoreType.SocialID.rawValue] as auth &{FloidInterface.StorePublic}?
@@ -165,7 +165,7 @@ pub contract Floid: FloidInterface {
         // --- Setters - Private Interfaces ---
 
         pub fun initializeStore(store: @{FloidInterface.StorePublic}) {
-            var storeType: GenericStoreType? = nil 
+            var storeType: GenericStoreType? = nil
             if store.isInstance(Type<@KeyValueStore.Store>()) {
                 storeType = GenericStoreType.KVStore
             } else if store.isInstance(Type<@AddressBindingStore.Store>()) {
@@ -180,6 +180,7 @@ pub contract Floid: FloidInterface {
             // first ensure registered
             self.ensureRegistered()
 
+            // add store to floid
             self.genericStores[storeType!.rawValue] <-! store
 
             emit FloidStoreInitialized(
@@ -188,7 +189,7 @@ pub contract Floid: FloidInterface {
             )
         }
 
-        // inherit data from another Floid identifier 
+        // inherit data from another Floid identifier
         pub fun inheritStore(from: Address, type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature) {
             pre {
                 self.genericStores[type.rawValue] == nil: "Only 'nil' resource can be inherited"
@@ -212,12 +213,13 @@ pub contract Floid: FloidInterface {
         }
 
         // generate a transfer key
-        pub fun generateTransferKey(type: GenericStoreType): String {pre {
+        pub fun generateTransferKey(type: GenericStoreType): String {
+            pre {
                 self.genericStores[type.rawValue] != nil: "The store resource doesn't exist"
             }
             // first ensure registered
             self.ensureRegistered()
-            
+
             let oneDay: UFix64 = 1000.0 * 60.0 * 60.0 * 24.0
             if self.transferKeys[type] == nil {
                 self.transferKeys[type] = FloidUtils.VerifiableMessages(5)
@@ -259,7 +261,7 @@ pub contract Floid: FloidInterface {
 
         // --- Setters - Contract Only ---
 
-        // transfer data to another Floid identifier 
+        // transfer data to another Floid identifier
         access(contract) fun transferStoreByKey(type: GenericStoreType, transferKey: String, sigTag: String, sigData: Crypto.KeyListSignature): @{FloidInterface.StorePublic} {
             pre {
                 self.genericStores[type.rawValue] != nil: "The store resource doesn't exist"
@@ -327,4 +329,3 @@ pub contract Floid: FloidInterface {
         emit ContractInitialized()
     }
 }
- 

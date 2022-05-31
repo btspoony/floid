@@ -14,7 +14,7 @@ pub contract AddressBindingStore {
        *   |___ |  | |___ |\ |  |  [__
         *  |___  \/  |___ | \|  |  ___]
          ******************************/
-    
+
     pub event FloidABStoreMessageGenerated(owner: Address, key: String)
     pub event FloidABStoreAddressIDBinded(owner: Address, addressID: String)
 
@@ -27,7 +27,7 @@ pub contract AddressBindingStore {
     pub resource interface PublicInterface {
         // get all binded AddressIDs
         pub fun getBindedAddressIDs(): [FloidUtils.AddressID]
-        // check if address id is binded 
+        // check if address id is binded
         pub fun isBinded(addrID: FloidUtils.AddressID): Bool
         // get the last Message
         pub fun getLastBindingMessage(): FloidUtils.ExpirableMessage?
@@ -63,7 +63,7 @@ pub contract AddressBindingStore {
             return ret
         }
 
-        // check if address id is binded 
+        // check if address id is binded
         pub fun isBinded(addrID: FloidUtils.AddressID): Bool {
             if let addresses = self.bindingMap[addrID.getChainID()] {
                 return addresses.containsKey(addrID.toString())
@@ -183,7 +183,7 @@ pub contract AddressBindingStore {
                         FloidProtocol.ReverseIndexType.ThirdPartyChain,
                         key: addrIDKey,
                         address: address,
-                        remove: true, 
+                        remove: true,
                         ensureRegistered: false
                     )
                 }
@@ -194,7 +194,7 @@ pub contract AddressBindingStore {
                 FloidProtocol.ReverseIndexType.ThirdPartyChain,
                 key: addrIDKey,
                 address: self.getOwner(),
-                remove: false, 
+                remove: false,
                 ensureRegistered: true
             )
         }

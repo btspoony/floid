@@ -178,7 +178,7 @@ pub contract FloidProtocol {
                 records[key]!.insert(key: address, true)
             } else {
                 // no update
-                return 
+                return
             }
 
             emit FloidProtocolReverseIndexUpdated(
@@ -221,4 +221,3 @@ pub contract FloidProtocol {
         emit ContractInitialized()
     }
 }
- 

@@ -38,4 +38,3 @@ pub contract SocialIDStore {
         }
     }
 }
- 
