@@ -1,6 +1,8 @@
 import { defineNuxtConfig } from "nuxt";
 import svgLoader from "vite-svg-loader";
-import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
+import nodePolyfills from "rollup-plugin-polyfill-node";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
@@ -39,18 +41,25 @@ export default defineNuxtConfig({
       svgLoader({
         defaultImport: "component",
       }),
-    ],
-    // Dependency Pre-Bundling
-    optimizeDeps: {
-      esbuildOptions: {
-        define: {
-          global: "globalThis",
-        },
-        plugins: [
-          NodeGlobalsPolyfillPlugin({
-            buffer: true,
-          }),
+      // ↓ Needed for development mode
+      !isProduction &&
+      nodePolyfills({
+        include: [
+          "node_modules/**/*.js",
+          new RegExp("node_modules/.vite/.*js"),
         ],
+      }),
+    ],
+    build: {
+      rollupOptions: {
+        plugins: [
+          // ↓ Needed for build
+          nodePolyfills(),
+        ],
+      },
+      // ↓ Needed for build if using WalletConnect and other providers
+      commonjsOptions: {
+        transformMixedEsModules: true,
       },
     },
   },
