@@ -31,7 +31,13 @@ pub contract FloidUtils {
         // get the last verification message
         pub fun getLastMessage(): ExpirableMessage? {
             if self.messages.length > 0 {
-                return self.messages[0]
+                let now = getCurrentBlock().timestamp
+                let message = self.messages[0]
+                if now <= message.expireAt {
+                    return message
+                } else {
+                    return nil
+                }
             }
             return nil
         }
