@@ -55,7 +55,8 @@ const steps = reactive<StepData[]>([
   },
 ]);
 
-const currentStep = useState<number>("currentSetupStep", () => ref(0));
+const currentStep = useCurrentSetupStep();
+const currentStepKey = useCurrentSetupKey();
 
 watchEffect(() => {
   const paths = route.path.split("/");
@@ -65,11 +66,15 @@ watchEffect(() => {
   }
 
   let currentSetupIndex = 0;
-  const found = steps.find((one) => one.page === lastPath);
-  if (found) {
-    currentSetupIndex = found.step;
+  // update step when key is not null
+  if (currentStepKey.value !== null) {
+    const found = steps.find((one) => one.page === lastPath);
+    if (found) {
+      currentSetupIndex = found.step;
+    }
   }
 
+  // update step by login status
   if (flowAccount.value?.loggedIn) {
     if (currentStep.value === 0) {
       currentSetupIndex = 1;
