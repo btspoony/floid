@@ -8,17 +8,21 @@
         <template v-else>
           <template v-if="!!currentMessage">
             <p class="pt-6">You have generated a binding key:</p>
-            <p class="py-2 text-lg">{{ currentMessage.msg }}</p>
-            <p class="py-2 text-lg">
-              ExpireIn:
-              <WidgetExpireCooldown class="text-lg" :expire-at="currentMessage.expireAt" />
+            <p class="pt-2 text-primary text-lg">{{ currentMessage?.msg }}</p>
+            <p class="pt-2 mb-4 text-lg">
+              Expire:
+              <WidgetExpireCooldown class="text-lg text-accent" :expire-at="currentMessage?.expireAt"
+                @expire-changed="onExpireChanged" />
             </p>
+            <button class="btn btn-sm btn-primary btn-block" @click="nextStep">
+              Next
+              <ArrowSmRightIcon class="fill-current h-4 w-4" />
+            </button>
           </template>
-          <p class="py-6">Setup and create a binding key.</p>
-
-          <button :class="['btn btn-sm btn-primary btn-block']" @click="submit">
-            Initialize
-          </button>
+          <template v-else>
+            <p class="py-6">Setup and create a binding key.</p>
+            <FlowSubmitTransaction content="Initialize" :method="submitAction" />
+          </template>
         </template>
       </div>
     </div>
@@ -26,9 +30,15 @@
 </template>
 
 <script setup lang="ts">
-const isOnMountedQuerying = ref(true);
-const currentMessage = useCurrentSetupMessage();
+import { ArrowSmRightIcon } from "@heroicons/vue/solid";
+// import { ExpirableMessage } from "~~/src/types/floid";
+
+const router = useRouter();
 const currentAccount = useFlowAccount();
+const currentMessage = useCurrentSetupMessage();
+
+const isOnMountedQuerying = ref(true);
+const submitAction = ref<() => Promise<string>>(null);
 
 onMounted(async () => {
   const app = useNuxtApp();
@@ -37,12 +47,21 @@ onMounted(async () => {
     currentAccount.value?.addr
   );
   isOnMountedQuerying.value = false;
-  currentMessage.value = res;
+  if (res && res?.expireAt > Date.now()) {
+    currentMessage.value = res;
+  }
+
+  // the button action
+  submitAction.value = app.$transactions.abstoreInitAndGenerateKey;
 });
 
-function submit() {
-  const app = useNuxtApp();
+function onExpireChanged(value: boolean) {
+  if (value) {
+    currentMessage.value = null;
+  }
+}
 
-  // app.$scripts.abstoreGetLastPendingMessage
+function nextStep() {
+  router.push("/setup/sign");
 }
 </script>

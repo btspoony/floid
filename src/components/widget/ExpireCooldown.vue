@@ -57,11 +57,6 @@ watch(datetime, (newVal, oldVal) => {
   }
 });
 
-onMounted(() => {
-  startInterval();
-});
-
-onBeforeUnmount(() => {
-  stopInterval();
-});
+onMounted(startInterval);
+onBeforeUnmount(stopInterval);
 </script>

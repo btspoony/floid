@@ -76,7 +76,7 @@ watchEffect(() => {
 
   // update step by login status
   if (flowAccount.value?.loggedIn) {
-    if (currentStep.value === 0) {
+    if (currentSetupIndex === 0 || currentStep.value === 0) {
       currentSetupIndex = 1;
     }
   } else {

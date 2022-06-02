@@ -40,7 +40,7 @@
           class="absolute inset-y-0 right-0 flex space-x-2 items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
           <ClientOnly>
             <WidgetThemeToggle />
-            <WidgetConnect class="hidden sm:block" />
+            <FlowConnect class="hidden sm:block" />
           </ClientOnly>
         </div>
       </div>
@@ -56,7 +56,7 @@
           <div class="divider"></div>
           <div class="flex items-center justify-center">
             <ClientOnly>
-              <WidgetConnect />
+              <FlowConnect />
             </ClientOnly>
           </div>
         </div>
