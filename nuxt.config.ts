@@ -18,6 +18,7 @@ export default defineNuxtConfig({
       accessApi: "",
       walletDiscovery: "",
       hostUrl: "",
+      floidAddress: "",
     },
   },
   // ts config
