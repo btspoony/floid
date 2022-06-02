@@ -276,6 +276,7 @@ declare module "@onflow/fcl" {
     args?: ArugmentFunction;
     limit?: number;
     proposer?: AuthorizationFunction;
+    payer?: AuthorizationFunction;
   }): Promise<string>;
 
   export function send(args: any, opts?: any): Promise<Response>;
