@@ -1,7 +1,7 @@
 import * as fcl from "@onflow/fcl";
 import * as scripts from "./scripts";
 import * as transactions from "./transactions";
-import { ExpirableMessage } from "../../types/floid";
+import * as floid from "../../types/floid";
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig();
@@ -29,8 +29,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       : "0x631e88ae7f1d7c20",
     "0xMetadataViews": isMainnet ? "0x1d7e57aa55817448" : "0x631e88ae7f1d7c20",
     "0xFloid": config.public.floidAddress,
-    // Type Decoder
-    "decoder.ExpirableMessage": (raw) => new ExpirableMessage(raw),
   };
 
   // initialize fcl
@@ -44,10 +42,14 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   // ------ Build scripts ------
   // Page setup - get lastPendingMessage
-  async function abstoreGetLastPendingMessage(): Promise<ExpirableMessage | null> {
-    return await fcl.query({
-      cadence: scripts.abstoreGetLastPendingMessage,
+  async function abstoreGetLastPendingMessage(
+    acct: string
+  ): Promise<floid.ExpirableMessage | undefined> {
+    const res = await fcl.query({
+      cadence: scripts.mock,
+      args: (arg, t) => [arg(acct, t.Address)],
     });
+    return res && new floid.ExpirableMessage(res);
   }
 
   // ------ Build transactions ------
@@ -55,7 +57,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Page setup - init and generate
   async function abstoreInitAndGenerateKey(): Promise<string> {
     return await fcl.mutate({
-      cadence: transactions.abstoreInitAndGenerateKey,
+      cadence: transactions.mock,
       limit: 9999,
     });
   }

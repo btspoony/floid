@@ -1,10 +1,12 @@
+import type { IJsonObject } from "@onflow/fcl";
+
 // Decode for ExpirableMessage
 export class ExpirableMessage {
   msg: string;
   expireAt: number;
 
-  constructor(raw: { msg: string; expireAt: number }) {
-    this.msg = raw.msg;
-    this.expireAt = raw.expireAt;
+  constructor(raw: IJsonObject) {
+    this.msg = raw.msg as string;
+    this.expireAt = raw.expireAt as number;
   }
 }

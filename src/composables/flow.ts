@@ -1,3 +1,6 @@
+import type { UserSnapshot } from "@onflow/fcl";
+import { ExpirableMessage } from "~/types/floid";
+
 // ---- Account status -----
 
 export const useFlowAccount = () =>
@@ -8,5 +11,5 @@ export const useFlowAccount = () =>
 export const useCurrentSetupStep = () =>
   useState<number>("currentSetupStep", () => ref(0));
 
-export const useCurrentSetupKey = () =>
-  useState<string>("currentSetupKey", () => ref(null));
+export const useCurrentSetupMessage = () =>
+  useState<ExpirableMessage>("currentSetupMessage", () => ref(null));

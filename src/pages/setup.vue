@@ -56,7 +56,7 @@ const steps = reactive<StepData[]>([
 ]);
 
 const currentStep = useCurrentSetupStep();
-const currentStepKey = useCurrentSetupKey();
+const currentSetupMessage = useCurrentSetupMessage();
 
 watchEffect(() => {
   const paths = route.path.split("/");
@@ -67,7 +67,7 @@ watchEffect(() => {
 
   let currentSetupIndex = 0;
   // update step when key is not null
-  if (currentStepKey.value !== null) {
+  if (currentSetupMessage.value !== null) {
     const found = steps.find((one) => one.page === lastPath);
     if (found) {
       currentSetupIndex = found.step;
