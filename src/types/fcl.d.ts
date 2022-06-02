@@ -2,7 +2,12 @@ declare module "*.cdc";
 declare module "*.cdc?raw";
 
 declare module "@onflow/config" {
-  import { FlowConfig } from "./fcl_config.d";
+  // Config
+  export interface FlowConfig {
+    put: (key: string, value: unknown) => FlowConfig;
+    get: <T>(key: string, defaultValue: T) => T;
+    update: <T>(key: string, updateFn: (oldValue: T) => T) => FlowConfig;
+  }
 
   export const config: FlowConfig;
 }
@@ -75,11 +80,17 @@ declare module "@onflow/types" {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare module "@onflow/fcl" {
-  import { FlowConfig } from "./fcl_config.d";
   import * as ftypes from "@onflow/types";
-  import { TransactionStatus } from "enums";
+  import { FlowConfig } from "@onflow/config";
 
-  export { TransactionStatus };
+  export enum TransactionStatus {
+    Unknown = 0,
+    Pending,
+    Finalized,
+    Executed,
+    Sealed,
+    Expired,
+  }
 
   export type AnyJson =
     | boolean
@@ -171,15 +182,17 @@ declare module "@onflow/fcl" {
     xform: any; // FType
   }
 
+  type TxSubCallback = (tx: TransactionReceipt) => void;
+
   export interface TransactionResult {
-    snapshot: () => any;
-    subscribe: (callback?: any) => any;
-    onceFinalized: (callback?: any) => any;
-    onceExecuted: (callback?: any) => any;
-    onceSealed: (callback?: any) => any;
+    snapshot: () => TransactionStatus;
+    subscribe: (callback?: TxSubCallback) => Promise<() => void>;
+    onceFinalized: (callback?: TxSubCallback) => Promise<TransactionReceipt>;
+    onceExecuted: (callback?: TxSubCallback) => Promise<TransactionReceipt>;
+    onceSealed: (callback?: TxSubCallback) => Promise<TransactionReceipt>;
   }
 
-  export interface TransactionData {
+  export interface TransactionReceipt {
     events: CadenceEvent[];
     status: TransactionStatus;
     errorMessage: string;
@@ -293,6 +306,14 @@ declare module "@onflow/fcl" {
 
   export function tx(transactionId: any): TransactionResult;
 
+  // tx checker
+  tx.isUnknown = (tx: TransactionReceipt) => boolean;
+  tx.isPending = (tx: TransactionReceipt) => boolean;
+  tx.isFinalized = (tx: TransactionReceipt) => boolean;
+  tx.isExecuted = (tx: TransactionReceipt) => boolean;
+  tx.isSealed = (tx: TransactionReceipt) => boolean;
+  tx.isExpired = (tx: TransactionReceipt) => boolean;
+
   export function authenticate(): Promise<UserSnapshot>;
   export function unauthenticate(): void;
   export function reauthenticate(): Promise<UserSnapshot>;
@@ -314,7 +335,7 @@ declare module "@onflow/fcl" {
     resolveArgument: () => Promise<Argument>;
   }
 
-  export function currentUser(): CurrentUser;
+  export const currentUser: CurrentUser;
 
   export function config(): FlowConfig;
 
