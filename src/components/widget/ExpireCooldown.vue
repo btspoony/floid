@@ -10,9 +10,12 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  expireAt: number;
-}>();
+const props = withDefaults(
+  defineProps<{
+    expireAt: number;
+  }>(),
+  { expireAt: Date.now() }
+);
 
 const emit = defineEmits<{
   (e: "expireChanged", id: boolean): void;

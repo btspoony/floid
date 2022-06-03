@@ -5,6 +5,7 @@
       <div>
         <h1 class="text-4xl font-bold">Sign with Ethers</h1>
         <PartialSetupMessageDisplay />
+        <EvmConnect :full="true" />
       </div>
     </div>
   </div>

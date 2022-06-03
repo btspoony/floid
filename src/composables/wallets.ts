@@ -1,4 +1,5 @@
 import type { UserSnapshot } from "@onflow/fcl";
+import { Signer, providers } from "ethers";
 
 // ---- Flow status -----
 
@@ -7,5 +8,8 @@ export const useFlowAccount = () =>
 
 // ---- EVM status -----
 
-export const useEvmAccount = () =>
-  useState<string>("currentEVMAccount", () => ref(null));
+export const useEVMAccount = () =>
+  useState<Signer>("currentEVMAccount", () => ref(null));
+
+export const useEVMProvider = () =>
+  useState<providers.JsonRpcProvider>("currentEVMProvider", () => ref(null));

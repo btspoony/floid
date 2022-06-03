@@ -1,6 +1,9 @@
 import { defineNuxtConfig } from "nuxt";
+import { resolve } from "path";
 import svgLoader from "vite-svg-loader";
 import nodePolyfills from "rollup-plugin-polyfill-node";
+import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -11,7 +14,7 @@ export default defineNuxtConfig({
   // Environment Variables
   runtimeConfig: {
     // The private keys which are only available within server-side
-    // NOTHING
+    infuraId: "",
     // Keys within public, will be also exposed to the client-side
     public: {
       network: "",
@@ -25,14 +28,25 @@ export default defineNuxtConfig({
   typescript: {
     shim: false,
   },
-  build: {
-    transpile: ["@heroicons/vue"],
-  },
   // installed modules
   modules: [
     // Doc: https://github.com/nuxt-community/tailwindcss-module
     "@nuxtjs/tailwindcss",
   ],
+  hooks: {
+    // for build mode
+    "vite:extendConfig"(clientConfig, { isClient }) {
+      if (isClient && process.env.NODE_ENV === "production") {
+        clientConfig.resolve.alias["@walletconnect/web3-provider"] = resolve(
+          __dirname,
+          "./node_modules/@walletconnect/web3-provider/dist/umd/index.min.js"
+        );
+      }
+    },
+  },
+  build: {
+    transpile: ["@heroicons/vue", "@ethersproject", "ethers"],
+  },
   // vite configure
   vite: {
     // raw assets
@@ -51,6 +65,23 @@ export default defineNuxtConfig({
         ],
       }),
     ],
+    optimizeDeps: {
+      include: ["bn.js", "js-sha3", "hash.js", "aes-js", "scrypt-js", "bech32"],
+      esbuildOptions: {
+        // Node.js global to browser globalThis
+        define: {
+          global: "globalThis",
+        },
+        // Enable esbuild polyfill plugins
+        plugins: [
+          NodeGlobalsPolyfillPlugin({
+            process: true,
+            buffer: true,
+          }),
+          NodeModulesPolyfillPlugin(),
+        ],
+      },
+    },
     build: {
       rollupOptions: {
         plugins: [
