@@ -7,21 +7,28 @@
         <progress v-if="isOnMountedQuerying" class="progress progress-primary w-54"></progress>
         <template v-else>
           <template v-if="!!currentMessage">
-            <p class="pt-6">You have generated a binding key:</p>
+            <p class="pt-4">You have generated a binding key:</p>
             <p class="pt-2 text-primary text-lg">{{ currentMessage?.msg }}</p>
             <p class="pt-2 mb-4 text-lg">
               Expire:
               <WidgetExpireCooldown class="text-lg text-accent" :expire-at="currentMessage?.expireAt"
                 @expire-changed="onExpireChanged" />
             </p>
-            <button class="btn btn-sm btn-primary btn-block" @click="nextStep">
+            <button class="card-button" role="button" @click="nextStep">
               Next
               <ArrowSmRightIcon class="fill-current h-4 w-4" />
             </button>
           </template>
           <template v-else>
-            <p class="py-6">Setup and create a binding key.</p>
-            <FlowSubmitTransaction content="Initialize" :method="submitAction" />
+            <p class="py-4">Setup and create a binding key.</p>
+            <FlowSubmitTransaction content="Initialize" :method="submitAction" @sealed="onTransactionSealed">
+              <template #next>
+                <button class="card-button" role="button" @click="nextStep">
+                  Next
+                  <ArrowSmRightIcon class="fill-current h-4 w-4" />
+                </button>
+              </template>
+            </FlowSubmitTransaction>
           </template>
         </template>
       </div>
@@ -31,7 +38,8 @@
 
 <script setup lang="ts">
 import { ArrowSmRightIcon } from "@heroicons/vue/solid";
-// import { ExpirableMessage } from "~~/src/types/floid";
+import type { TransactionReceipt } from "@onflow/fcl";
+import { ExpirableMessage } from "~~/src/types/floid";
 
 const router = useRouter();
 const currentAccount = useFlowAccount();
@@ -59,6 +67,14 @@ function onExpireChanged(value: boolean) {
   if (value) {
     currentMessage.value = null;
   }
+}
+
+function onTransactionSealed(tx: TransactionReceipt) {
+  // TODO filter from events
+  currentMessage.value = new ExpirableMessage({
+    msg: "hello world",
+    expireAt: Date.now() + 120 * 1000,
+  });
 }
 
 function nextStep() {

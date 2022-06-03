@@ -193,9 +193,11 @@ declare module "@onflow/fcl" {
   }
 
   export interface TransactionReceipt {
+    blockId: string;
+    errorMessage: string;
     events: CadenceEvent[];
     status: TransactionStatus;
-    errorMessage: string;
+    statusString: string;
     statusCode: number;
   }
 

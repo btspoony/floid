@@ -25,12 +25,16 @@
     @apply container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4;
   }
 
+  div.flow-ball {
+    @apply object-cover w-[480px] h-[480px] bg-[url('assets/image/home-flow.png')] bg-bottom;
+  }
+
   div.card {
     @apply place-self-center bg-white dark:bg-base-200 rounded-lg shadow-lg p-4;
   }
 
-  div.flow-ball {
-    @apply object-cover w-[480px] h-[480px] bg-[url('assets/image/home-flow.png')] bg-bottom;
+  button.card-button {
+    @apply btn btn-sm btn-primary btn-block;
   }
 }
 

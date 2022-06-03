@@ -1001,15 +1001,15 @@
   dependencies:
     "@onflow/util-actor" "^1.0.1"
 
-"@onflow/fcl@latest":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@onflow/fcl/-/fcl-1.0.2.tgz#6f3a2a60ac63903252af3fac64026f8f69d6a64e"
-  integrity sha512-QzK6G5ISwns08rRc2p7N2BB0icLm5dGjzEtdU7UmM+j8gFh0DQh3T/2XMopcPLMIwuIzrY7OhlSEgoBtqTeQRw==
+"@onflow/fcl@1.0.3-alpha.0":
+  version "1.0.3-alpha.0"
+  resolved "https://registry.yarnpkg.com/@onflow/fcl/-/fcl-1.0.3-alpha.0.tgz#5a1d306b08ef2f0e3d5f55a85b7bfdd15cf7082f"
+  integrity sha512-gV6AmhKz4r4q8GB/gi5zY0EBeXzjKzD4ju6fFsUW7yFMhNdkMMC/cHVjCk8NUjTtOpKN+G/TdNmUjv3h8UIPqA==
   dependencies:
     "@onflow/config" "^1.0.1"
     "@onflow/interaction" "0.0.11"
     "@onflow/rlp" "^1.0.1"
-    "@onflow/sdk" "^1.0.1"
+    "@onflow/sdk" "^1.0.2-alpha.0"
     "@onflow/types" "^1.0.1"
     "@onflow/util-actor" "^1.0.1"
     "@onflow/util-address" "^1.0.1"
@@ -1029,26 +1029,26 @@
   dependencies:
     buffer "^6.0.3"
 
-"@onflow/sdk@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@onflow/sdk/-/sdk-1.0.1.tgz#244db2eb24d5a71ef2f407c9a79f8158471bfb75"
-  integrity sha512-mlQ12cLAqg+ekIJU1U9JOyFbsouuRrbyLFd2oM84F1++5j3EnD2u2PihohUL6bXtQbaLSWNnvIfQBmtMIzuQZQ==
+"@onflow/sdk@^1.0.2-alpha.0":
+  version "1.0.2-alpha.1"
+  resolved "https://registry.yarnpkg.com/@onflow/sdk/-/sdk-1.0.2-alpha.1.tgz#2d936ebbb754789cfabaf4878b8444096a8039e7"
+  integrity sha512-1yavqsk16SM+Sl+mKcyEcCNXsPi8FWZUYBpMi41QwD+qwIjARQ5hPgJ/I9olZORLRvBommjvVNYDrn5ALhHNEw==
   dependencies:
     "@onflow/config" "^1.0.1"
     "@onflow/rlp" "^1.0.1"
-    "@onflow/transport-http" "^1.1.0"
+    "@onflow/transport-http" "^1.3.0-alpha.1"
     "@onflow/util-actor" "^1.0.1"
     "@onflow/util-address" "^1.0.1"
     "@onflow/util-invariant" "^1.0.1"
-    "@onflow/util-logger" "^1.0.1"
+    "@onflow/util-logger" "^1.0.2-alpha.0"
     "@onflow/util-template" "^1.0.1"
     deepmerge "^4.2.2"
     sha3 "^2.1.4"
 
-"@onflow/transport-http@^1.1.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@onflow/transport-http/-/transport-http-1.2.0.tgz#9578854e8c750cde6427168fc4d18be4137e881f"
-  integrity sha512-+Qejt1flUpB1B4sS1uFA9RNuL5+ZrOXC/1EyH2UpwuTZ4MIN3ATCVWiGaHr+LydgHzcBKugkiQLxAVYbBtFq6A==
+"@onflow/transport-http@^1.3.0-alpha.1":
+  version "1.3.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@onflow/transport-http/-/transport-http-1.3.0-alpha.1.tgz#8f4b5ce0dfe98e3e5d0895307afacf645b021daa"
+  integrity sha512-6/eTwsUQAjxo7TYBcdjcs2ab0CSGAvma6SPc6eIiUczx9/BcvE7399l/dTFVJPejS57uHV1BlIAa4GAwe4l4xg==
   dependencies:
     "@onflow/util-address" "^1.0.1"
     "@onflow/util-invariant" "^1.0.1"
@@ -1077,12 +1077,12 @@
   resolved "https://registry.yarnpkg.com/@onflow/util-invariant/-/util-invariant-1.0.1.tgz#b97c5a16ada0383524b3d7442fd004d6605f5bc3"
   integrity sha512-FYLgxASDmD2qVru8G8MX9y3jE8DFie1fk7lWnWndnJvsO94/jmZaql73ytmZme37TQoTWSNfilAgU9T0HcG/gA==
 
-"@onflow/util-logger@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@onflow/util-logger/-/util-logger-1.0.1.tgz#9b559e945c7894e2c12d426a530aea7017a25c1f"
-  integrity sha512-0QQ/h8mDQIe9yy6xvFj5GOu7Mo1ZnjwaFcGQRTuM+V6XMD5cxs3IChKYIDuuGIZtzwyf0kwK+HXOqrFQhfB9fg==
+"@onflow/util-logger@^1.0.2-alpha.0":
+  version "1.0.2-alpha.0"
+  resolved "https://registry.yarnpkg.com/@onflow/util-logger/-/util-logger-1.0.2-alpha.0.tgz#356f35418b858fe31ba1c65e3fdaca03b87fa8a4"
+  integrity sha512-tDy8S2CNYqArSUkO2X5fiPgCq5kgerpJOZ47p/+Au1JbhRseJhv8wCEHNoihBK00KT20YAgdGTlS3m8zk921ww==
   dependencies:
-    "@onflow/sdk" "^1.0.1"
+    "@onflow/sdk" "^1.0.2-alpha.0"
 
 "@onflow/util-node-http-modules@^1.0.2":
   version "1.0.2"

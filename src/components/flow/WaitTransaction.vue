@@ -1,9 +1,12 @@
 <template>
-  <div class="card min-w-40 max-w-full flex flex-col items-center">
-    <p class="font-semibold text-lg pb-2">
-      Status: <span class="text-secondary">{{ txStatusString }}</span>
+  <div class="card min-w-40 max-w-full items-center border-2 border-primary">
+    <p class="font-semibold pb-2 text-lg">
+      <span class="badge badge-lg badge-primary">{{ txStatusString }}</span>
+      <a :href="fvsTx(txid)" target="_blank" class="pl-2 link-highlight">{{
+          txidDisplay
+      }}</a>
     </p>
-    <progress class="progress progress-secondary w-40" :value="progress" max="100"></progress>
+    <progress class="progress progress-secondary w-full" :value="progress" max="100"></progress>
   </div>
 </template>
 
@@ -20,24 +23,39 @@ const emit = defineEmits<{
   (e: "error", message: string): void;
 }>();
 
-const STATUS_MAP = {
-  0: "UNKNOWN",
-  1: "PENDING",
-  2: "FINALIZED",
-  3: "EXECUTED",
-  4: "SEALED",
-  5: "EXPIRED",
-};
-
 const txStatus = ref<TransactionReceipt>(null);
 
-const txStatusString = computed(() => STATUS_MAP[txStatus.value?.status ?? 0]);
+const txStatusString = computed(() => {
+  const STATUS_MAP = {
+    0: "UNKNOWN",
+    1: "PENDING",
+    2: "FINALIZED",
+    3: "EXECUTED",
+    4: "SEALED",
+    5: "EXPIRED",
+  };
+  return (
+    txStatus.value?.statusString ?? STATUS_MAP[txStatus.value?.status || 0]
+  );
+});
+
 const progress = computed(() => {
   const status = txStatus.value?.status ?? 0;
-  if (status === 5) {
-    return 0;
+  switch (status) {
+    case 0:
+    case 1:
+    case 5:
+      return undefined;
+    case 2:
+    case 3:
+    case 4:
+      return Math.min(100, (status - 1) * 33.34);
   }
-  return status * 25;
+});
+
+const txidDisplay = computed(() => {
+  const str = props.txid;
+  return str.slice(0, 5) + "..." + str.slice(str.length - 5);
 });
 
 let unsub: any;
@@ -50,6 +68,7 @@ async function startSubscribe() {
       "color:purple;font-weight:bold;font-family:monospace;"
     );
     unsub = await $fcl.tx(props.txid).subscribe((tx) => {
+      if (!tx.blockId || !tx.status) return;
       txStatus.value = tx;
       if ($fcl.tx.isSealed(tx)) {
         emit("sealed", tx);
