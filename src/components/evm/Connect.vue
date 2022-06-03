@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="evmAccount" class="flex items-center justify-between rounded-full bg-accent">
-      <span class="flex-auto h-4 leading-4 pl-4 pr-1 font-medium">
+      <span class="flex-auto h-4 leading-4 pl-4 pr-1 font-medium text-center">
         {{ evmAddress ?? "No Address" }}
       </span>
       <button class="flex-none btn btn-sm btn-circle btn-accent" @click="logout">
@@ -35,7 +35,6 @@ const config = useRuntimeConfig();
 
 const theme = useTheme();
 const evmAccount = useEVMAccount();
-const evmProvider = useEVMProvider();
 const evmAddress = ref<string>(null);
 
 const web3modal = ref(null);
@@ -51,15 +50,20 @@ const providerOptions = reactive({
 
 watch(evmAccount, async (newVal, oldVal) => {
   if (newVal !== null) {
-    const addr = await newVal.getAddress();
+    const addr = await toRaw(newVal).getAddress();
+
     if (typeof addr === "string") {
-      const ens = await evmProvider.value?.lookupAddress(addr);
-      if (typeof ens === "string") {
-        evmAddress.value = ens;
-      } else {
-        evmAddress.value =
-          addr.slice(0, 5) + "..." + addr.slice(addr.length - 5);
-      }
+      const addrDisplay =
+        addr.slice(0, 8) + "..." + addr.slice(addr.length - 8);
+      // display first
+      evmAddress.value = addrDisplay;
+      // check ens display
+      try {
+        const ens = await toRaw(newVal).provider?.lookupAddress(addr);
+        if (typeof ens === "string") {
+          evmAddress.value = ens;
+        }
+      } catch (err) { }
     }
   } else {
     evmAddress.value = null;
@@ -67,19 +71,28 @@ watch(evmAccount, async (newVal, oldVal) => {
 });
 
 onMounted(() => {
-  // nextTick(() => {
-  //   if (web3modal.cachedProvider) {
-  //     evmProvider.value = web3modal.cachedProvider;
-  //     evmAccount.value = evmProvider.value.getSigner();
-  //   }
-  // });
+  nextTick(async () => {
+    const providerName = web3modal.value?.cachedProvider();
+    if (providerName) {
+      connectWallet();
+    }
+  });
 });
 
 async function connectWallet() {
-  console.log(web3modal);
-  const instance = await web3modal.connect();
-  evmProvider.value = new ethers.providers.Web3Provider(instance);
-  evmAccount.value = evmProvider.value.getSigner();
+  if (!web3modal.value) return;
+
+  const instance = await web3modal.value.connect();
+  try {
+    const provider = new ethers.providers.Web3Provider(instance);
+    const signer = provider.getSigner();
+    if (provider && signer) {
+      console.log("Connected EVM Address:", await signer?.getAddress());
+      evmAccount.value = signer;
+    }
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 function logout() {
