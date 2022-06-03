@@ -1,5 +1,5 @@
 <template>
-  <main class="max-w-full hero min-h-[75vh] pt-[10vh]">
+  <main class="max-w-full hero min-h-[88vh] pt-[10vh]">
     <div class="page-container grid grid-cols-1 gap-8 justify-center place-content-center">
       <ul class="steps">
         <li v-for="(one, index) in steps" :key="'step_' + index" :data-content="getStepContent(one, index)" :class="{

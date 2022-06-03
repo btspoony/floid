@@ -7,13 +7,7 @@
         <progress v-if="isOnMountedQuerying" class="progress progress-primary w-54"></progress>
         <template v-else>
           <template v-if="!!currentMessage">
-            <p class="pt-4">You have generated a binding key:</p>
-            <p class="pt-2 text-primary text-lg">{{ currentMessage?.msg }}</p>
-            <p class="pt-2 mb-4 text-lg">
-              Expire:
-              <WidgetExpireCooldown class="text-lg text-accent" :expire-at="currentMessage?.expireAt"
-                @expire-changed="onExpireChanged" />
-            </p>
+            <PartialSetupMessageDisplay />
             <button class="card-button" role="button" @click="nextStep">
               Next
               <ArrowSmRightIcon class="fill-current h-4 w-4" />
@@ -48,12 +42,19 @@ const currentMessage = useCurrentSetupMessage();
 const isOnMountedQuerying = ref(true);
 const submitAction = ref<() => Promise<string>>(null);
 
+// FIXME, remove mock
+const mockMessage = new ExpirableMessage({
+  msg: "hello world",
+  expireAt: Date.now() + 600 * 1000,
+});
+
 onMounted(async () => {
   const app = useNuxtApp();
 
-  const res = await app.$scripts.abstoreGetLastPendingMessage(
-    currentAccount.value?.addr
-  );
+  const res =
+    (await app.$scripts.abstoreGetLastPendingMessage(
+      currentAccount.value?.addr
+    )) ?? mockMessage;
   isOnMountedQuerying.value = false;
   if (res && res?.expireAt > Date.now()) {
     currentMessage.value = res;
@@ -63,18 +64,9 @@ onMounted(async () => {
   submitAction.value = app.$transactions.abstoreInitAndGenerateKey;
 });
 
-function onExpireChanged(value: boolean) {
-  if (value) {
-    currentMessage.value = null;
-  }
-}
-
 function onTransactionSealed(tx: TransactionReceipt) {
-  // TODO filter from events
-  currentMessage.value = new ExpirableMessage({
-    msg: "hello world",
-    expireAt: Date.now() + 120 * 1000,
-  });
+  // FIXME, filter from events
+  currentMessage.value = mockMessage;
 }
 
 function nextStep() {

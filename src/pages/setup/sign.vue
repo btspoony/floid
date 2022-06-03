@@ -3,11 +3,14 @@
     <div class="hero-content gap-4 flex-col lg:flex-row text-center lg:text-left">
       <div class="flow-ball flex-none"></div>
       <div>
-        <h1 class="text-4xl font-bold">sign</h1>
-        <p class="py-6">TODO</p>
+        <h1 class="text-4xl font-bold">Sign with Ethers</h1>
+        <PartialSetupMessageDisplay />
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const router = useRouter();
+const currentMessage = useCurrentSetupMessage();
+</script>
