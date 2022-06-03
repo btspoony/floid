@@ -1,10 +1,4 @@
-import type { UserSnapshot } from "@onflow/fcl";
 import { ExpirableMessage } from "~/types/floid";
-
-// ---- Account status -----
-
-export const useFlowAccount = () =>
-  useState<UserSnapshot>("currentAccount", () => ref(null));
 
 // ----- Setup related -----
 
