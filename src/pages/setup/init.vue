@@ -7,7 +7,7 @@
         <progress v-if="isOnMountedQuerying" class="progress progress-primary w-54"></progress>
         <template v-else>
           <template v-if="!!currentMessage">
-            <PartialSetupMessageDisplay />
+            <PartialSetupMessagePanel />
             <button class="card-button" role="button" @click="nextStep">
               Next
               <ArrowSmRightIcon class="fill-current h-4 w-4" />

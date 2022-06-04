@@ -7,3 +7,6 @@ export const useCurrentSetupStep = () =>
 
 export const useCurrentSetupMessage = () =>
   useState<ExpirableMessage>("currentSetupMessage", () => ref(null));
+
+export const useCurrentSetupMessageSignature = () =>
+  useState<string>("currentSetupMessasgeSig", () => ref(null));

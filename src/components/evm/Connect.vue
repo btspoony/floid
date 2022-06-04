@@ -1,14 +1,14 @@
 <template>
   <div>
-    <div v-if="evmAccount" class="flex items-center justify-between rounded-full bg-accent">
+    <div v-if="evmAccount" class="flex items-center justify-between rounded-full text-accent border-accent border-2">
       <span class="flex-auto h-4 leading-4 pl-4 pr-1 font-medium text-center">
         {{ evmAddress ?? "No Address" }}
       </span>
-      <button class="flex-none btn btn-sm btn-circle btn-accent" @click="logout">
+      <button class="flex-none btn btn-sm btn-circle btn-ghost" @click="logout">
         <LogoutIcon class="fill-current h-4 w-4" />
       </button>
     </div>
-    <button v-else :class="['btn btn-sm btn-accent', props.full && 'btn-block']" @click="connectWallet">
+    <button v-else :class="['btn btn-sm btn-outline btn-accent', props.full && 'btn-block']" @click="connectWallet">
       Connect EVM Wallet
     </button>
     <ClientOnly>

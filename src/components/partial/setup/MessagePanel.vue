@@ -14,7 +14,16 @@
 
 <script setup lang="ts">
 const currentMessage = useCurrentSetupMessage();
+const currentMsgSignature = useCurrentSetupMessageSignature();
 
+// when current setup message changed,
+// cleanup message signature
+watch(currentMessage, (newVal, oldVal) => {
+  currentMsgSignature.value = null;
+});
+
+// when current message expired,
+// cleanup message
 function onExpireChanged(value: boolean) {
   if (value) {
     currentMessage.value = null;
