@@ -48,6 +48,7 @@
     "husky": "^8.0.1",
     "lint-staged": "^12.4.1",
     "nuxt": "^3.0.0-rc.3",
+    "postcss-custom-properties": "^12.1.7",
     "postcss-html": "^1.4.1",
     "prettier": "^2.6.2",
     "rollup-plugin-polyfill-node": "^0.9.0",
