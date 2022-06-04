@@ -46,10 +46,28 @@ export default defineNuxtPlugin((nuxtApp) => {
     acct: string
   ): Promise<floid.ExpirableMessage | undefined> {
     const res = await fcl.query({
+      // FIXME, replace real
       cadence: scripts.mock,
       args: (arg, t) => [arg(acct, t.Address)],
     });
     return res && new floid.ExpirableMessage(res);
+  }
+
+  async function abstoreGetBindedAddressIDs(
+    acct: string
+  ): Promise<Array<floid.AddressID>> {
+    const res = await fcl.query({
+      // FIXME, replace real
+      cadence: scripts.mock,
+      args: (arg, t) => [arg(acct, t.Address)],
+    });
+    if (res && Array.isArray(res)) {
+      return Array.prototype.map.call(res, (one: fcl.IJsonObject) => {
+        return new floid.AddressID(one);
+      });
+    } else {
+      return [];
+    }
   }
 
   // ------ Build transactions ------
@@ -57,6 +75,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Page setup - init and generate
   async function abstoreInitAndGenerateKey(): Promise<string> {
     return await fcl.mutate({
+      // FIXME, replace real
       cadence: transactions.mock,
       limit: 9999,
     });
@@ -71,6 +90,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     // chain: floid.SupportedChains = floid.SupportedChains.EVM
   ): Promise<string> {
     return await fcl.mutate({
+      // FIXME, replace real
       cadence: transactions.mock,
       args: (arg, t) => [
         arg(address, t.String),
@@ -86,7 +106,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     provide: {
       appName: () => appName,
       fcl: fcl,
-      scripts: { abstoreGetLastPendingMessage },
+      scripts: { abstoreGetLastPendingMessage, abstoreGetBindedAddressIDs },
       transactions: { abstoreInitAndGenerateKey, abstoreVerifyBindingKey },
     },
   };
