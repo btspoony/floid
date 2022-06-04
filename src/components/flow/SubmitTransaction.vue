@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col gap-4">
     <template v-if="!txid">
       <button :class="[
         'card-button',
@@ -38,6 +38,15 @@ const emit = defineEmits<{
   (e: "sealed", tx: TransactionReceipt): void;
   (e: "error", message: string): void;
 }>();
+
+// expose members
+defineExpose({
+  resetComponent: ref(() => {
+    txid.value = null;
+    errorMessage.value = null;
+    isSealed.value = false;
+  }),
+});
 
 const txid = ref(null);
 const isLoading = ref(false);

@@ -10,3 +10,7 @@ export class ExpirableMessage {
     this.expireAt = raw.expireAt as number;
   }
 }
+
+export enum SupportedChains {
+  EVM,
+}

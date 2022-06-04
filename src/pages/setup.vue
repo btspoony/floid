@@ -60,6 +60,9 @@ const currentSetupMessage = useCurrentSetupMessage();
 
 watchEffect(() => {
   const paths = route.path.split("/");
+  if (!route.path.startsWith("/setup")) return;
+
+  // check last path
   let lastPath = paths[paths.length - 1];
   if (lastPath === "setup") {
     lastPath = "";

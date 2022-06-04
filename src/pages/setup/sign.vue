@@ -15,8 +15,6 @@
 </template>
 
 <script setup lang="ts">
-import { ethers } from "ethers";
-
 const router = useRouter();
 const evmAccount = useEVMAccount();
 const currentMessage = useCurrentSetupMessage();
@@ -24,7 +22,7 @@ const currentMsgSignature = useCurrentSetupMessageSignature();
 
 const isValid = computed(() => {
   const msg = currentMessage.value;
-  return msg && msg.expireAt < Date.now() && evmAccount.value !== null;
+  return msg && msg.expireAt > Date.now() && evmAccount.value !== null;
 });
 
 async function signMessage() {

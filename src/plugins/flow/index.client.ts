@@ -62,12 +62,32 @@ export default defineNuxtPlugin((nuxtApp) => {
     });
   }
 
+  // Page setup - verify binding message
+  async function abstoreVerifyBindingKey(
+    address: string,
+    message: string,
+    publicKey: string,
+    signature: string
+    // chain: floid.SupportedChains = floid.SupportedChains.EVM
+  ): Promise<string> {
+    return await fcl.mutate({
+      cadence: transactions.mock,
+      args: (arg, t) => [
+        arg(address, t.String),
+        arg(message, t.String),
+        arg(publicKey, t.String),
+        arg(signature, t.String),
+      ],
+      limit: 9999,
+    });
+  }
+
   return {
     provide: {
       appName: () => appName,
       fcl: fcl,
       scripts: { abstoreGetLastPendingMessage },
-      transactions: { abstoreInitAndGenerateKey },
+      transactions: { abstoreInitAndGenerateKey, abstoreVerifyBindingKey },
     },
   };
 });

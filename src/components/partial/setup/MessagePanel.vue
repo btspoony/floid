@@ -1,14 +1,20 @@
 <template>
-  <div class="py-4 text-lg">
+  <div class="flex flex-col gap-2 py-4 text-lg">
     <p>You have generated a binding key:</p>
-    <p class="pt-2 text-primary text-center font-bold">
+    <p class="text-primary text-center font-bold">
       {{ currentMessage?.msg }}
     </p>
-    <p class="pt-2">
+    <p>
       Expire:
       <WidgetExpireCooldown class="text-accent" :expire-at="currentMessage?.expireAt"
         @expire-changed="onExpireChanged" />
     </p>
+    <template v-if="currentMsgSignature !== null">
+      <div class="divider">Signature</div>
+      <p class="text-primary text-sm max-w-[320px] break-words">
+        {{ currentMsgSignature }}
+      </p>
+    </template>
   </div>
 </template>
 

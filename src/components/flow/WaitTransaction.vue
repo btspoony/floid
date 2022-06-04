@@ -1,5 +1,5 @@
 <template>
-  <div class="card min-w-40 max-w-full items-center border-2 border-primary">
+  <div class="card min-w-40 w-full text-center border-2 border-primary">
     <p class="font-semibold pb-2 text-lg">
       <span class="badge badge-lg badge-primary">{{ txStatusString }}</span>
       <a :href="fvsTx(txid)" target="_blank" class="pl-2 link-highlight">{{
@@ -55,7 +55,7 @@ const progress = computed(() => {
 
 const txidDisplay = computed(() => {
   const str = props.txid;
-  return str.slice(0, 5) + "..." + str.slice(str.length - 5);
+  return str.slice(0, 6) + "..." + str.slice(str.length - 6);
 });
 
 let unsub: any;
