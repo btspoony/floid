@@ -1,5 +1,5 @@
 <template>
-  <div class="border border-primary rounded-full w-full h-full">
+  <div class="relative rounded-full w-full h-full">
     <img v-if="!!address" :src="avatarUrl" :alt="address" class="rounded-full" />
   </div>
 </template>

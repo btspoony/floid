@@ -22,7 +22,7 @@
   }
 
   div.page-container {
-    @apply container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4;
+    @apply container max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
   div.flow-ball {
