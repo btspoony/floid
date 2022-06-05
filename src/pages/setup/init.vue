@@ -1,32 +1,27 @@
 <template>
-  <div class="hero">
-    <div class="hero-content gap-4 flex-col lg:flex-row text-center lg:text-left">
-      <div class="flow-ball flex-none"></div>
-      <div>
-        <h1 class="text-4xl font-bold">Initialize Floid</h1>
-        <progress v-if="isOnMountedQuerying" class="progress progress-primary w-54"></progress>
-        <template v-else>
-          <template v-if="!!currentMessage">
-            <PartialSetupMessagePanel />
+  <div class="flex-auto max-w-[320px]">
+    <h1 class="text-4xl font-bold">Initialize Floid</h1>
+    <progress v-if="isOnMountedQuerying" class="progress progress-primary w-54"></progress>
+    <template v-else>
+      <template v-if="!!currentMessage">
+        <PartialSetupMessagePanel />
+        <button class="card-button" role="button" @click="nextStep">
+          Next
+          <ArrowSmRightIcon class="fill-current h-4 w-4" />
+        </button>
+      </template>
+      <template v-else>
+        <p class="py-4">Setup and create a binding key.</p>
+        <FlowSubmitTransaction content="Initialize" :method="submitAction" @sealed="onTransactionSealed">
+          <template #next>
             <button class="card-button" role="button" @click="nextStep">
               Next
               <ArrowSmRightIcon class="fill-current h-4 w-4" />
             </button>
           </template>
-          <template v-else>
-            <p class="py-4">Setup and create a binding key.</p>
-            <FlowSubmitTransaction content="Initialize" :method="submitAction" @sealed="onTransactionSealed">
-              <template #next>
-                <button class="card-button" role="button" @click="nextStep">
-                  Next
-                  <ArrowSmRightIcon class="fill-current h-4 w-4" />
-                </button>
-              </template>
-            </FlowSubmitTransaction>
-          </template>
-        </template>
-      </div>
-    </div>
+        </FlowSubmitTransaction>
+      </template>
+    </template>
   </div>
 </template>
 

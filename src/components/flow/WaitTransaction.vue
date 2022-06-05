@@ -1,5 +1,5 @@
 <template>
-  <div class="card min-w-40 w-full text-center border-2 border-primary">
+  <div class="panel min-w-40 w-full text-center border-2 border-primary">
     <p class="font-semibold pb-2 text-lg">
       <span class="badge badge-lg badge-primary">{{ txStatusString }}</span>
       <a :href="fvsTx(txid)" target="_blank" class="pl-2 link-highlight">{{

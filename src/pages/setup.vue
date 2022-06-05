@@ -1,5 +1,5 @@
 <template>
-  <main class="max-w-full hero min-h-[88vh] pt-[10vh]">
+  <main class="max-w-full hero min-h-[88vh] pt-16">
     <div class="page-container grid grid-cols-1 gap-8 justify-center place-content-center">
       <ul class="steps">
         <li v-for="(one, index) in steps" :key="'step_' + index" :data-content="getStepContent(one, index)" :class="{
@@ -9,8 +9,13 @@
           {{ one.label }}
         </li>
       </ul>
-      <div class="card min-w-[90%] min-h-[50vh]">
-        <NuxtPage />
+      <div class="panel min-w-[90%]">
+        <div class="hero min-h-[50vh]">
+          <div class="hero-content w-full flex-col lg:flex-row gap-4 text-center lg:text-left">
+            <div class="flow-ball flex-none"></div>
+            <NuxtPage />
+          </div>
+        </div>
       </div>
     </div>
   </main>

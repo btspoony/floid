@@ -1,6 +1,13 @@
 <template>
-  <main class="max-w-full min-h-[88vh] pt-16">
-    <div class="page-container">Profile</div>
+  <main class="max-w-full min-h-[88vh] pt-16 flex flex-col">
+    <!-- Banner -->
+    <div class="relative max-h-80 overflow-hidden">
+      <div class="h-0 pb-[25%] bg-primary-content/30">
+        <!-- TODO add profile banner -->
+      </div>
+    </div>
+    <!-- Head -->
+    <div class="page-container"></div>
   </main>
 </template>
 

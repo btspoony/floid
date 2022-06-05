@@ -1,24 +1,19 @@
 <template>
-  <div class="hero">
-    <div class="hero-content gap-4 flex-col lg:flex-row text-center lg:text-left">
-      <div class="flow-ball flex-none"></div>
-      <div>
-        <h1 class="text-4xl font-bold">Bind to Floid</h1>
-        <EvmAddressDisplay class="mt-4" :locked="true" />
-        <PartialSetupMessagePanel v-if="!transactionSent" />
-        <div v-else class="divider">Please Wait</div>
-        <FlowSubmitTransaction ref="compSubmitTx" :method="verifyBindingKey" @sealed="onTransactionSealed">
-          <LinkIcon class="fill-current h-4 w-4 pr-1" />
-          Verify And Bind
-          <template #next>
-            <button v-if="!transactionSucceed" class="card-button" role="button" @click="resetProcess">
-              <RefreshIcon class="fill-current h-4 w-4 pr-1" />
-              Reset
-            </button>
-          </template>
-        </FlowSubmitTransaction>
-      </div>
-    </div>
+  <div class="flex-auto max-w-[320px]">
+    <h1 class="text-4xl font-bold">Bind to Floid</h1>
+    <EvmAddressDisplay class="mt-4" :locked="true" />
+    <PartialSetupMessagePanel v-if="!transactionSent" />
+    <div v-else class="divider">Please Wait</div>
+    <FlowSubmitTransaction ref="compSubmitTx" :method="verifyBindingKey" @sealed="onTransactionSealed">
+      <LinkIcon class="fill-current h-4 w-4 pr-1" />
+      Verify And Bind
+      <template #next>
+        <button v-if="!transactionSucceed" class="card-button" role="button" @click="resetProcess">
+          <RefreshIcon class="fill-current h-4 w-4 pr-1" />
+          Reset
+        </button>
+      </template>
+    </FlowSubmitTransaction>
   </div>
 </template>
 
