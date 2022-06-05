@@ -31,6 +31,9 @@ onMounted(() => {
   const { $fcl } = useNuxtApp();
   $fcl.currentUser.subscribe((user) => {
     current.value = user;
+    if (user) {
+      console.log(`Flow User loggedIn: ${user.addr}`);
+    }
   });
 });
 

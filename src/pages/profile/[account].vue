@@ -1,26 +1,27 @@
 <template>
-  <main class="max-w-full">
-    <section class="hero min-h-screen">
-      <div class="page-container">Profile</div>
-    </section>
+  <main class="max-w-full min-h-[88vh] pt-16">
+    <div class="page-container">Profile</div>
   </main>
 </template>
 
 <script setup lang="ts">
 import type { AddressID } from "../../types/floid";
 
-const route = useRoute();
-const currentAccount = useFlowAccount();
-
 definePageMeta({
   title: "Profile",
 });
+
+const route = useRoute();
+const currentAccount = useFlowAccount();
+
+// page account
+const pageAccount = computed<string>(() => route.params.account as string);
 
 // check if current is self
 const isSelf = computed(() => {
   return (
     currentAccount.value?.loggedIn &&
-    currentAccount.value?.addr === route.params.account
+    currentAccount.value?.addr === pageAccount.value
   );
 });
 
@@ -30,7 +31,7 @@ onMounted(async () => {
   let bindingAddrs: Array<AddressID>;
   try {
     bindingAddrs = await app.$scripts.abstoreGetBindedAddressIDs(
-      currentAccount.value?.addr
+      pageAccount.value
     );
   } catch (err) {
     console.error(err);

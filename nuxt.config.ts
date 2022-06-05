@@ -22,6 +22,7 @@ export default defineNuxtConfig({
       walletDiscovery: "",
       hostUrl: "",
       floidAddress: "",
+      avatarUrl: "",
     },
   },
   // ts config
