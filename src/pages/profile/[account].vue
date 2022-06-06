@@ -8,7 +8,7 @@
     </div>
     <!-- Head -->
     <div class="page-container flex">
-      <div class="mb-4 -mt-10 sm:-mt-20 md:-mt-28 lg:-mt-40">
+      <div class="mb-4 -mt-10 sm:-mt-20 lg:-mt-40">
         <div :class="[
           'relative z-10 rounded-[50%] bg-base-100 shadow-lg',
           'w-[90px] h-[90px] basis-[90px] border-2',
@@ -18,17 +18,31 @@
           <WidgetAvatar :address="pageAccount" />
         </div>
       </div>
+      <!-- TODO: smaller then sm account info -->
     </div>
     <!-- Address or Name -->
-    <div class="page-container flex">
+    <div class="page-container flex justify-between mb-3">
       <div class="min-w-0 max-w-[90%] sm:max-w-[80%] lg:max-w-[60%]">
-        <div class="m-0 text-primary font-semibold text-xl sm:text-2xl lg:text-3xl">
+        <div class="m-0 font-semibold text-xl sm:text-2xl lg:text-3xl">
           <span class="break-words">{{ pageAccount }}</span>
         </div>
       </div>
+      <!-- TODO: greator then sm account info -->
     </div>
-    <!-- Binded Address -->
-    <!-- Collections -->
+    <div class="page-container flex flex-col gap-3">
+      <!-- Tabs -->
+      <div class="tabs">
+        <NuxtLink v-for="tab in tabs" :key="tab.label" :class="[
+          'tab tab-lg font-semibold',
+          currentTab === tab.page
+            ? 'text-primary border-b-4 border-primary'
+            : '',
+        ]" :to="`/profile/${pageAccount}/${tab.page}`">
+          {{ tab.label }}
+        </NuxtLink>
+      </div>
+      <NuxtPage />
+    </div>
   </main>
 </template>
 
@@ -51,6 +65,18 @@ const isSelf = computed(() => {
     currentAccount.value?.loggedIn &&
     currentAccount.value?.addr === pageAccount.value
   );
+});
+
+const tabs = reactive([
+  { label: "Portfolio", page: "portfolio" },
+  { label: "NFT", page: "nft" },
+]);
+const currentTab = ref("");
+
+watchEffect(() => {
+  const paths = route.path.split("/");
+  if (!route.path.startsWith("/profile")) return;
+  currentTab.value = paths[paths.length - 1];
 });
 
 onMounted(async () => {
