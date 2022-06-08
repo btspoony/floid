@@ -16,16 +16,14 @@ import { SunIcon, MoonIcon } from "@heroicons/vue/outline";
 const theme = useTheme();
 
 onMounted(() => {
-  if (process.client) {
-    if (
-      localStorage.theme === "dark" ||
-      (!("theme" in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
-      theme.value = "dark";
-    } else {
-      theme.value = "light";
-    }
+  if (
+    localStorage.theme === "dark" ||
+    (!("theme" in localStorage) &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches)
+  ) {
+    theme.value = "dark";
+  } else {
+    theme.value = "light";
   }
 });
 
