@@ -23,6 +23,7 @@ export default defineNuxtConfig({
       hostUrl: "",
       floidAddress: "",
       avatarUrl: "",
+      gaId: "",
     },
   },
   // ts config
