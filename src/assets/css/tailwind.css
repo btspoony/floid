@@ -10,6 +10,54 @@
       @apply transition-all duration-200;
     }
   }
+
+  article {
+    @apply my-5;
+  }
+
+  article header {
+    @apply mb-8;
+  }
+
+  /**
+  * Loading ([aria-busy=true])
+  */
+
+  [aria-busy="true"] {
+    cursor: progress;
+  }
+
+  [aria-busy="true"]:not(input):not(select):not(textarea) {
+    &::before {
+      @apply inline-block w-4 h-4 align-text-bottom;
+      @apply animate-spin rounded-2xl opacity-80;
+      @apply border-[0.1875em] border-solid border-current border-r-transparent;
+      content: "";
+      vertical-align: -.125em;
+    }
+
+    &:not(:empty) {
+      &::before {
+        @apply mr-2 ml-0;
+        margin-inline-start: 0;
+        margin-inline-end: 0.5em;
+      }
+    }
+
+    &:empty {
+      @apply text-center;
+    }
+  }
+
+  button,
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  a {
+    &[aria-busy="true"] {
+      @apply pointer-events-none;
+    }
+  }
 }
 
 @layer components {
