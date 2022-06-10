@@ -1,7 +1,7 @@
 <template>
-  <div :data-theme="dataTheme">
+  <div>
     <!-- override html and head -->
-    <Html :lang="locale" :class="theme">
+    <Html :lang="locale">
 
     <Head>
       <Title>{{ route.meta.title ?? "Home" }}</Title>
@@ -38,17 +38,12 @@
 <script setup>
 const route = useRoute();
 const locale = useLocale();
-const theme = useTheme();
 
 useHead({
   titleTemplate: "%s - Floid, A DID Protocol on Flow blockchain",
 });
 
 // ----- Data -----
-
-const dataTheme = computed(() => {
-  return theme.value === "dark" ? "forest" : "floid";
-});
 
 const description = ref(
   "A DID Protocol on Flow blockchain, binding addresses from EVM compatible blockchains."

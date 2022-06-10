@@ -1,5 +1,3 @@
-export const useTheme = () => useState<string>("theme", () => ref("light"));
-
 interface ScrollStatus {
   isOnTop: boolean;
   isScrollUp: boolean;

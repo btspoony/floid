@@ -7,13 +7,15 @@
     <EvmAddressDisplay />
     <ClientOnly>
       <Teleport to="body">
-        <web3-modal ref="web3modal" :theme="theme" :provider-options="providerOptions" cache-provider />
+        <web3-modal ref="web3modal" :theme="isDark ? 'dark' : 'light'" :provider-options="providerOptions"
+          cache-provider />
       </Teleport>
     </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useDark } from "@vueuse/core";
 import { ethers } from "ethers";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 
@@ -26,7 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const config = useRuntimeConfig();
 
-const theme = useTheme();
+const isDark = useDark();
 const evmAccount = useEVMAccount();
 
 const web3modal = ref(null);

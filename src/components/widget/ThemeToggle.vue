@@ -2,7 +2,7 @@
   <label class="swap swap-rotate hover:text-primary dark:hover:text-white focus:outline-none">
     <!-- this hidden checkbox controls the state -->
     <input v-model="isLight" type="checkbox" />
-    <span class="sr-only">View ThemeToggle: {{ theme }}</span>
+    <span class="sr-only">View ThemeToggle: {{ isDark ? "dark" : "light" }}</span>
     <!-- volume on icon -->
     <SunIcon class="swap-off fill-current h-6 w-6" />
     <!-- volume off icon -->
@@ -11,34 +11,22 @@
 </template>
 
 <script setup lang="ts">
+import { useDark, useToggle } from "@vueuse/core";
 import { SunIcon, MoonIcon } from "@heroicons/vue/outline";
 
-const theme = useTheme();
-
-onMounted(() => {
-  if (
-    localStorage.theme === "dark" ||
-    (!("theme" in localStorage) &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches)
-  ) {
-    theme.value = "dark";
-  } else {
-    theme.value = "light";
-  }
+const isDark = useDark({
+  attribute: "data-theme",
+  valueDark: "forest",
+  valueLight: "floid",
 });
+const toggleDark = useToggle(isDark);
 
 const isLight = computed({
   get(): boolean {
-    return theme.value !== "dark";
+    return isDark.value;
   },
   set(value: boolean) {
-    if (value && theme.value !== "light") {
-      theme.value = "light";
-      localStorage.setItem("theme", "light");
-    } else if (!value && theme.value !== "dark") {
-      theme.value = "dark";
-      localStorage.setItem("theme", "dark");
-    }
+    toggleDark(value);
   },
 });
 </script>
