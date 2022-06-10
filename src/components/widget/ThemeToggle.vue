@@ -19,6 +19,15 @@ const isDark = useDark({
   valueDark: "forest",
   valueLight: "floid",
 });
+
+const isSharedDark = useSharedDark();
+watchEffect(
+  () => {
+    isSharedDark.value = isDark.value;
+  },
+  { flush: "sync" }
+);
+
 const toggleDark = useToggle(isDark);
 
 const isLight = computed({

@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- override html and head -->
-    <Html :lang="locale">
+    <Html :lang="locale" :class="[isDark ? 'dark' : '']">
     <BaseMeta :title="route.meta.title ?? 'Home'" :description="description" :url="route.fullPath">
       <Meta property="og:site_name" :content="website" />
       <Meta property="og:image" :content="`http://${website}/social-card.jpg`" />
@@ -29,6 +29,7 @@
 <script setup>
 const route = useRoute();
 const locale = useLocale();
+const isDark = useSharedDark();
 
 useHead({
   titleTemplate: "%s - Floid, A DID Protocol on Flow blockchain",

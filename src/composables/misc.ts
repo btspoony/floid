@@ -12,3 +12,6 @@ export const useScrollStatus = () =>
       lastScrollY: 0,
     })
   );
+
+export const useSharedDark = () =>
+  useState<boolean>("sharedDark", () => ref(false));

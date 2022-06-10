@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-import { useDark } from "@vueuse/core";
 import { ethers } from "ethers";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 
@@ -28,7 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const config = useRuntimeConfig();
 
-const isDark = useDark();
+const isDark = useSharedDark();
 const evmAccount = useEVMAccount();
 
 const web3modal = ref(null);
