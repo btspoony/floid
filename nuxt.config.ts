@@ -47,12 +47,7 @@ export default defineNuxtConfig({
     },
   },
   build: {
-    transpile: [
-      "@heroicons/vue",
-      "@ethersproject",
-      "ethers",
-      "json-rpc-engine",
-    ],
+    transpile: ["@heroicons/vue", "@ethersproject", "ethers"],
   },
   // vite configure
   vite: {
@@ -65,12 +60,12 @@ export default defineNuxtConfig({
       }),
       // ↓ Needed for development mode
       !isProduction &&
-        nodePolyfills({
-          include: [
-            "node_modules/**/*.js",
-            new RegExp("node_modules/.vite/.*js"),
-          ],
-        }),
+      nodePolyfills({
+        include: [
+          "node_modules/**/*.js",
+          new RegExp("node_modules/.vite/.*js"),
+        ],
+      }),
     ],
     optimizeDeps: {
       include: ["bn.js", "js-sha3", "hash.js", "aes-js", "scrypt-js", "bech32"],
