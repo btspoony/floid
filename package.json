@@ -64,7 +64,6 @@
     "@onflow/types": "^1.0.1",
     "@vueuse/core": "^8.6.0",
     "@walletconnect/web3-provider": "^1.7.8",
-    "cross-env": "^7.0.3",
     "daisyui": "^2.15.0",
     "dotenv": "^16.0.0",
     "ethers": "^5.6.8",
