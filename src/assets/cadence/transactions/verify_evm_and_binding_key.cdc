@@ -27,7 +27,7 @@ transaction(
 
   execute {
     let addrId = FloidUtils.AddressID(
-      SupportedChainType.EVM_COMPATIBLE,
+      FloidUtils.SupportedChainType.EVM_COMPATIBLE,
       address: address,
       referID: nil
     )

@@ -10,7 +10,7 @@ transaction() {
   prepare(acct: AuthAccount) {
     // SETUP Floid identifier resource, link public and private
     if acct.borrow<&Floid.Identifier>(from: Floid.FloidStoragePath) == nil {
-      acct.save(<- Floid.createIdentifier(acct.address), to: Floid.FloidStoragePath)
+      acct.save(<- Floid.createIdentifier(acct: acct.address), to: Floid.FloidStoragePath)
       acct.link<&Floid.Identifier{Floid.FloidPublic, FloidInterface.IdentifierPublic, MetadataViews.Resolver}>
         (Floid.FloidPublicPath, target: Floid.FloidStoragePath)
       acct.link<&Floid.Identifier{Floid.FloidPrivate}>
