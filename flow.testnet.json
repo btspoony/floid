@@ -8,6 +8,15 @@
   "deployments": {
     "testnet": {
       "testnet-admin": [
+        "EmeraldIdentity",
+        "FloidUtils",
+        "FloidInterface",
+        "FloidProtocol",
+        "KeyValueStore",
+        "AddressBindingStore",
+        "SocialIDStore",
+        "Floid",
+        "FloidAirdrop"
       ]
     }
   }

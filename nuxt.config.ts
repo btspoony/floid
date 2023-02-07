@@ -1,9 +1,8 @@
 import { defineNuxtConfig } from "nuxt";
 import { resolve } from "path";
 import svgLoader from "vite-svg-loader";
-import nodePolyfills from "rollup-plugin-polyfill-node";
-import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
-import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import inject from "@rollup/plugin-inject";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -58,15 +57,20 @@ export default defineNuxtConfig({
       svgLoader({
         defaultImport: "component",
       }),
-      // ↓ Needed for development mode
-      !isProduction &&
       nodePolyfills({
-        include: [
-          "node_modules/**/*.js",
-          new RegExp("node_modules/.vite/.*js"),
-        ],
+        // Whether to polyfill `node:` protocol imports.
+        protocolImports: true,
       }),
     ],
+    build: {
+      rollupOptions: {
+        plugins: [inject({ Buffer: ["buffer", "Buffer"] })],
+      },
+      // ↓ Needed for build if using WalletConnect and other providers
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
     optimizeDeps: {
       include: ["bn.js", "js-sha3", "hash.js", "aes-js", "scrypt-js", "bech32"],
       esbuildOptions: {
@@ -74,26 +78,6 @@ export default defineNuxtConfig({
         define: {
           global: "globalThis",
         },
-        // Enable esbuild polyfill plugins
-        plugins: [
-          NodeGlobalsPolyfillPlugin({
-            process: true,
-            buffer: true,
-          }),
-          NodeModulesPolyfillPlugin(),
-        ],
-      },
-    },
-    build: {
-      rollupOptions: {
-        plugins: [
-          // ↓ Needed for build
-          nodePolyfills(),
-        ],
-      },
-      // ↓ Needed for build if using WalletConnect and other providers
-      commonjsOptions: {
-        transformMixedEsModules: true,
       },
     },
   },

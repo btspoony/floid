@@ -1,4 +1,5 @@
 import * as fcl from "@onflow/fcl";
+import { send as grpcSend } from "@onflow/transport-grpc";
 import * as scripts from "./scripts";
 import * as transactions from "./transactions";
 import * as floid from "../../types/floid";
@@ -14,6 +15,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     "flow.network": config.public.network,
     "accessNode.api": config.public.accessApi,
     "discovery.wallet": config.public.walletDiscovery,
+    "sdk.transport": grpcSend,
     "app.detail.title": appName,
     "app.detail.icon": config.public.hostUrl + "/apple-touch-icon.png",
     "service.OpenID.scopes": "email email_verified name zoneinfo",

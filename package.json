@@ -31,9 +31,8 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
-    "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@nuxtjs/tailwindcss": "^5.1.2",
+    "@rollup/plugin-inject": "^5.0.3",
     "@tailwindcss/typography": "^0.5.2",
     "@types/node": "^17.0.39",
     "@typescript-eslint/eslint-plugin": "^5.24.0",
@@ -55,12 +54,14 @@
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-recommended-vue": "^1.4.0",
     "typescript": "^4.7.3",
+    "vite-plugin-node-polyfills": "^0.5.0",
     "vite-svg-loader": "^3.3.0"
   },
   "dependencies": {
     "@headlessui/vue": "^1.6.4",
     "@heroicons/vue": "^1.0.6",
     "@onflow/fcl": "latest",
+    "@onflow/transport-grpc": "^1.1.4",
     "@onflow/types": "^1.0.1",
     "@vueuse/core": "^8.6.0",
     "@walletconnect/web3-provider": "^1.7.8",
